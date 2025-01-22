@@ -1,7 +1,7 @@
-# This .gitignore file should be placed at the root of your Unity project directory
-#
-# Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
-#
+# OS X
+.DS_Store
+
+# Unity generated
 unity/[Ll]ibrary/
 unity/[Tt]emp/
 unity/[Oo]bj/
@@ -16,6 +16,9 @@ unity/[Mm]emoryCaptures/
 
 # Recordings can get excessive in size
 unity/[Rr]ecordings/
+
+# Asset meta data should only be ignored when the corresponding asset is also ignored
+!/[Aa]ssets/**/*.meta
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # unity/[Aa]ssets/AssetStoreTools*
@@ -67,7 +70,3 @@ crashlytics-build.properties
 
 # Packed Addressables
 unity/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
-
-# Temporary auto-generated Android Assets
-unity/[Aa]ssets/[Ss]treamingAssets/aa.meta
-unity/[Aa]ssets/[Ss]treamingAssets/aa/*
