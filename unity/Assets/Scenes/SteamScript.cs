@@ -21,12 +21,11 @@ public class SteamScript : MonoBehaviour
             adjustSteamModule = new AdjustSteamModule("2fm9gkqubvpc", "sandbox", this);
 
             // Initialize the AdjustSteamModule
-            adjustSteamModule.Start(jsonResponse =>
+            adjustSteamModule.Start(response =>
             {
-                if (jsonResponse != null && jsonResponse.ContainsKey("ask_in"))
+                if (!string.IsNullOrEmpty(response))
                 {
-                    int askIn = jsonResponse.TryGetValue("ask_in", out var value) && int.TryParse(value.ToString(), out int parsedValue) ? parsedValue : 0;
-                    Debug.Log($"ask_in value: {askIn} ms");
+                    Debug.Log("Session Tracked Successfully with response: " + response);
 
                     // Call GetAttribution with a callback
                     adjustSteamModule.GetAttribution(response =>
@@ -39,7 +38,7 @@ public class SteamScript : MonoBehaviour
                         {
                             Debug.LogError("GetAttribution failed or returned no response.");
                         }
-                    }, askIn);
+                    });
                 }
                 else
                 {

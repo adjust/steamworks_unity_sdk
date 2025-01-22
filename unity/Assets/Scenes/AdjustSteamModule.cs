@@ -74,24 +74,14 @@ public class AdjustSteamModule
         Debug.Log($"Parsed OS Info - Name: {deviceOSName}, Version: {deviceOSVersion}");
     }
 
-    public void Start(Action<Dictionary<string, object>> onResponse = null)
+    public void Start(Action<string> onResponse)
     {
         Debug.Log("Starting AdjustSteamModule - Tracking session.");
         TrackSession(response =>
         {
             if (!string.IsNullOrEmpty(response))
             {
-                try
-                {
-                    var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
-                    Debug.Log("TrackSession Response Parsed Successfully.");
-                    onResponse?.Invoke(jsonResponse);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError("Failed to parse TrackSession response: " + ex.Message);
-                    onResponse?.Invoke(null);
-                }
+                onResponse?.Invoke(response);
             }
             else
             {
@@ -175,7 +165,7 @@ public class AdjustSteamModule
         coroutineExecutor.StartCoroutine(SendGetRequest(url, payload, onResponse));
     }
 
-    public void GetAttribution(Action<string> onResponse, int askInMilliseconds = 0)
+    public void GetAttribution(Action<string> onResponse)
     {
         if (string.IsNullOrEmpty(appToken))
         {
@@ -186,20 +176,7 @@ public class AdjustSteamModule
         string url = $"{AdjustBaseUrl}/attribution";
         Dictionary<string, string> payload = GenerateCommonPayload();
 
-        if (askInMilliseconds > 0)
-        {
-            coroutineExecutor.StartCoroutine(CallWithAskInDelay(() => coroutineExecutor.StartCoroutine(SendGetRequest(url, payload, onResponse)), askInMilliseconds / 1000f));
-        }
-        else
-        {
-            coroutineExecutor.StartCoroutine(SendGetRequest(url, payload, onResponse));
-        }
-    }
-
-    private IEnumerator CallWithAskInDelay(Action action, float delaySeconds)
-    {
-        yield return new WaitForSeconds(delaySeconds);
-        action.Invoke();
+        coroutineExecutor.StartCoroutine(SendGetRequest(url, payload, onResponse));
     }
 
     private Dictionary<string, string> GenerateCommonPayload()
