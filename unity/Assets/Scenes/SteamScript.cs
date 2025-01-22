@@ -10,7 +10,7 @@ public class SteamScript : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        eventButton.onClick.AddListener(TrackEventonClick);
+        eventButton.onClick.AddListener(TrackEventOnClick);
 
         if (SteamManager.Initialized)
         {
@@ -49,11 +49,17 @@ public class SteamScript : MonoBehaviour
         }
     }
 
-    void TrackEventonClick()
+    void TrackEventOnClick()
     {
         var parameters = new Dictionary<string, object>
         {
-            { "custom_key", "custom_value" }
+            { "custom_key", "custom_value" },
+            { "callback_params", new Dictionary<string, object>
+                {
+                    { "foo", "bar" },
+                    { "master", "yoda" }
+                }
+            }
         };
 
         adjustSteamModule.TrackEvent("34vgg9", parameters, response =>
