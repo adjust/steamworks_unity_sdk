@@ -151,8 +151,9 @@ public class AdjustSteamModule
         {
             foreach (var param in parameters)
             {
-                if (param.Value is Dictionary<string, object> nestedDict)
+                if (param.Value is Dictionary<string, object>)
                 {
+                    var nestedDict = param.Value as Dictionary<string, object>;
                     payload.Add(param.Key, JsonConvert.SerializeObject(nestedDict));
                 }
                 else
