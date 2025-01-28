@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,7 +43,7 @@ public class SteamScript : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError("Failed to parse Adjust init response or response was null.");
+                    Debug.LogError("Failed to parse Adjust session/init response or response was null.");
                 }
             });
         }

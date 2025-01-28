@@ -68,8 +68,9 @@ public class AdjustSteamModule
         deviceOSName = "unknown";
 #endif
 
-        var match = Regex.Match(operatingSystem, "^(?:\\S+\\s)?(?<version>.+)");
-        deviceOSVersion = match.Success ? match.Groups["version"].Value : "unknown";
+        deviceOSVersion = Regex.Match(operatingSystem, @"\d+(\.\d+)+").Success
+            ? Regex.Match(operatingSystem, @"\d+(\.\d+)+").Value
+                   : "Unknown";
 
         Debug.Log($"Parsed OS Info - Name: {deviceOSName}, Version: {deviceOSVersion}");
     }
