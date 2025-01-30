@@ -6,7 +6,7 @@ using Steamworks;
 
 public class SteamScript : MonoBehaviour
 {
-    private AdjustSteamModule adjustSteamModule;
+    private Adjust adjustSteamModule;
     public Button eventButton;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -16,7 +16,7 @@ public class SteamScript : MonoBehaviour
         if (SteamManager.Initialized)
         {
             // Pass 'this' as the MonoBehaviour executor
-            adjustSteamModule = new AdjustSteamModule("2fm9gkqubvpc", "sandbox", this);
+            adjustSteamModule = new Adjust("2fm9gkqubvpc", "sandbox", this);
             adjustSteamModule.InitSdk(response =>
             {
                 if (!string.IsNullOrEmpty(response))

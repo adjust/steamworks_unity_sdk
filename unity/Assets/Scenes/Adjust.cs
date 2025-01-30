@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-public class AdjustSteamModule
+public class Adjust
 {
     private const string AdjustBaseUrl = "https://app.adjust.com";
 
@@ -29,11 +29,11 @@ public class AdjustSteamModule
     // Private MonoBehaviour reference for coroutine execution
     private readonly MonoBehaviour monoBehavior;
 
-    public AdjustSteamModule(string appToken, string environment, MonoBehaviour monoBehavior)
+    public Adjust(string appToken, string environment, MonoBehaviour monoBehavior)
     {
         if (isInitialized)
         {
-            Debug.LogWarning("AdjustSteamModule is already initialized!");
+            Debug.LogWarning("Adjust is already initialized!");
             return;
         }
 
@@ -73,11 +73,11 @@ public class AdjustSteamModule
 
     public void InitSdk(Action<string> onResponse)
     {
-        Debug.Log("Starting AdjustSteamModule - Tracking session.");
+        Debug.Log("Starting Adjust - Tracking session.");
         TrackSession(response =>
         {
             isInitialized = true;
-            Debug.Log("AdjustSteamModule initialized with AppToken and Environment.");
+            Debug.Log("Adjust initialized with AppToken and Environment.");
 
             if (!string.IsNullOrEmpty(response))
             {
@@ -139,7 +139,7 @@ public class AdjustSteamModule
     {
         if (!isInitialized || string.IsNullOrEmpty(eventToken))
         {
-            Debug.LogError("AdjustSteamModule is not initialized or EventToken is not set. Cannot track event.");
+            Debug.LogError("Adjust is not initialized or EventToken is not set. Cannot track event.");
             return;
         }
 
@@ -170,7 +170,7 @@ public class AdjustSteamModule
     {
         if (!isInitialized)
         {
-            Debug.LogError("AdjustSteamModule is not initialized. Cannot request attribution.");
+            Debug.LogError("Adjust is not initialized. Cannot request attribution.");
             return;
         }
 
