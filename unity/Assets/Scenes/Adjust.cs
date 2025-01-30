@@ -72,9 +72,9 @@ public class Adjust
 #if UNITY_STANDALONE_OSX
         osName = "macos";
 #elif UNITY_STANDALONE_WIN
-        deviceOSName = "windows";
+        osName = "windows";
 #else
-        deviceOSName = "unsupported";
+        osName = "unsupported";
 #endif
 
         var match = Regex.Match(operatingSystem, @"\d+(\.\d+)+");
