@@ -209,7 +209,7 @@ public class AdjustSteamModule
     private string GetCurrentTimestamp()
     {
         DateTime now = DateTime.UtcNow;
-        return now.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'Z");
+        return now.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z");
     }
 
     private IEnumerator SendGetRequest(string url, Dictionary<string, string> payload, Action<string> onResponse)
