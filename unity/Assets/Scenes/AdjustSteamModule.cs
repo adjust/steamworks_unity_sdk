@@ -27,9 +27,9 @@ public class AdjustSteamModule
     private string appVersion;
 
     // Private MonoBehaviour reference for coroutine execution
-    private readonly MonoBehaviour coroutineExecutor;
+    private readonly MonoBehaviour monoBehavior;
 
-    public AdjustSteamModule(string appToken, string environment, MonoBehaviour executor)
+    public AdjustSteamModule(string appToken, string environment, MonoBehaviour monoBehavior)
     {
         if (isInitialized)
         {
@@ -37,15 +37,15 @@ public class AdjustSteamModule
             return;
         }
 
-        if (executor == null)
+        if (monoBehavior == null)
         {
             Debug.LogError("MonoBehaviour executor cannot be null.");
-            throw new ArgumentNullException(nameof(executor), "MonoBehaviour executor is required to run coroutines.");
+            throw new ArgumentNullException(nameof(monoBehavior), "MonoBehaviour executor is required to run coroutines.");
         }
 
         this.appToken = appToken;
         this.environment = environment;
-        this.coroutineExecutor = executor;
+        this.monoBehavior = monoBehavior;
 
         ParseDeviceOSInfo(SystemInfo.operatingSystem);
         deviceModel = SystemInfo.deviceModel;
@@ -132,7 +132,7 @@ public class AdjustSteamModule
         string url = $"{AdjustBaseUrl}/session";
         Dictionary<string, string> payload = GenerateCommonPayload();
 
-        coroutineExecutor.StartCoroutine(SendGetRequest(url, payload, onResponse));
+        monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
     }
 
     public void TrackEvent(string eventToken, Dictionary<string, object> parameters = null, Action<string> onResponse = null)
@@ -163,7 +163,7 @@ public class AdjustSteamModule
             }
         }
 
-        coroutineExecutor.StartCoroutine(SendGetRequest(url, payload, onResponse));
+        monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
     }
 
     public void GetAttribution(Action<string> onResponse)
@@ -177,7 +177,7 @@ public class AdjustSteamModule
         string url = $"{AdjustBaseUrl}/attribution";
         Dictionary<string, string> payload = GenerateCommonPayload();
 
-        coroutineExecutor.StartCoroutine(SendGetRequest(url, payload, onResponse));
+        monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
     }
 
     private Dictionary<string, string> GenerateCommonPayload()
