@@ -51,9 +51,6 @@ public class AdjustSteamModule
         deviceModel = SystemInfo.deviceModel;
         appVersion = Application.version;
 
-        isInitialized = true;
-
-        Debug.Log("AdjustSteamModule initialized with AppToken and Environment.");
         InitializeSteamUserId();
         RetrieveOrGenerateSteamUuid();
     }
@@ -65,12 +62,11 @@ public class AdjustSteamModule
 #elif UNITY_STANDALONE_WIN
         deviceOSName = "windows";
 #else
-        deviceOSName = "unknown";
+        deviceOSName = "unsupported";
 #endif
 
-        deviceOSVersion = Regex.Match(operatingSystem, @"\d+(\.\d+)+").Success
-            ? Regex.Match(operatingSystem, @"\d+(\.\d+)+").Value
-                   : "Unknown";
+        var match = Regex.Match(operatingSystem, @"\d+(\.\d+)+");
+        deviceOSVersion = match.Success ? match.Value : "Unknown";
 
         Debug.Log($"Parsed OS Info - Name: {deviceOSName}, Version: {deviceOSVersion}");
     }
@@ -80,6 +76,9 @@ public class AdjustSteamModule
         Debug.Log("Starting AdjustSteamModule - Tracking session.");
         TrackSession(response =>
         {
+            isInitialized = true;
+            Debug.Log("AdjustSteamModule initialized with AppToken and Environment.");
+
             if (!string.IsNullOrEmpty(response))
             {
                 onResponse?.Invoke(response);
@@ -138,9 +137,9 @@ public class AdjustSteamModule
 
     public void TrackEvent(string eventToken, Dictionary<string, object> parameters = null, Action<string> onResponse = null)
     {
-        if (string.IsNullOrEmpty(appToken) || string.IsNullOrEmpty(eventToken))
+        if (!isInitialized || string.IsNullOrEmpty(eventToken))
         {
-            Debug.LogError("AppToken or EventToken is not set. Cannot track event.");
+            Debug.LogError("AdjustSteamModule is not initialized or EventToken is not set. Cannot track event.");
             return;
         }
 
@@ -169,9 +168,9 @@ public class AdjustSteamModule
 
     public void GetAttribution(Action<string> onResponse)
     {
-        if (string.IsNullOrEmpty(appToken))
+        if (!isInitialized)
         {
-            Debug.LogError("AppToken is not set. Cannot request attribution.");
+            Debug.LogError("AdjustSteamModule is not initialized. Cannot request attribution.");
             return;
         }
 
@@ -215,7 +214,13 @@ public class AdjustSteamModule
 
     private IEnumerator SendGetRequest(string url, Dictionary<string, string> payload, Action<string> onResponse)
     {
-        string queryString = string.Join("&", payload.Select(kvp => UnityWebRequest.EscapeURL(kvp.Key) + "=" + UnityWebRequest.EscapeURL(kvp.Value)));
+        var escapedPayload = payload.Select(kvp => 
+        {
+            var escapedKey = UnityWebRequest.EscapeURL(kvp.Key);
+            var escapedValue = UnityWebRequest.EscapeURL(kvp.Value);
+            return $"{escapedKey}={escapedValue}";
+        });
+        string queryString = string.Join("&", escapedPayload);
         string fullUrl = url + "?" + queryString;
 
         Debug.Log($"Sending GET request to {fullUrl}");

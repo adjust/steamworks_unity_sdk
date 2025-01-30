@@ -15,13 +15,8 @@ public class SteamScript : MonoBehaviour
 
         if (SteamManager.Initialized)
         {
-            string name = SteamFriends.GetPersonaName();
-            Debug.Log(name);
-            // Initialize the AdjustSteamModule
             // Pass 'this' as the MonoBehaviour executor
             adjustSteamModule = new AdjustSteamModule("2fm9gkqubvpc", "sandbox", this);
-
-            // Initialize the AdjustSteamModule
             adjustSteamModule.InitSdk(response =>
             {
                 if (!string.IsNullOrEmpty(response))
@@ -33,7 +28,7 @@ public class SteamScript : MonoBehaviour
                     {
                         if (!string.IsNullOrEmpty(response))
                         {
-                            Debug.Log("GetAttribution Response Parsed Successfully with response: " + response);
+                            Debug.Log("Attribution Response: " + response);
                         }
                         else
                         {
@@ -43,7 +38,7 @@ public class SteamScript : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError("Failed to parse Adjust session/init response or response was null.");
+                    Debug.LogError("Failed to track session.");
                 }
             });
         }
@@ -74,11 +69,4 @@ public class SteamScript : MonoBehaviour
             }
         });
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
 }
