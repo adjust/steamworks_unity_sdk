@@ -21,8 +21,8 @@ public class AdjustSteamModule
     private bool isInitialized = false;
 
     // Additional device-specific parameters
-    private string deviceOSName;
-    private string deviceOSVersion;
+    private string osName;
+    private string osVersion;
     private string deviceModel;
     private string appVersion;
 
@@ -58,7 +58,7 @@ public class AdjustSteamModule
     private void ParseDeviceOSInfo(string operatingSystem)
     {
 #if UNITY_STANDALONE_OSX
-        deviceOSName = "macos";
+        osName = "macos";
 #elif UNITY_STANDALONE_WIN
         deviceOSName = "windows";
 #else
@@ -66,9 +66,9 @@ public class AdjustSteamModule
 #endif
 
         var match = Regex.Match(operatingSystem, @"\d+(\.\d+)+");
-        deviceOSVersion = match.Success ? match.Value : "Unknown";
+        osVersion = match.Success ? match.Value : "Unknown";
 
-        Debug.Log($"Parsed OS Info - Name: {deviceOSName}, Version: {deviceOSVersion}");
+        Debug.Log($"Parsed OS Info - Name: {osName}, Version: {osVersion}");
     }
 
     public void InitSdk(Action<string> onResponse)
@@ -187,8 +187,8 @@ public class AdjustSteamModule
             { "app_token", appToken },
             { "environment", environment },
             { "created_at", GetCurrentTimestamp() },
-            { "os_name", deviceOSName },
-            { "os_version", deviceOSVersion },
+            { "os_name", osName },
+            { "os_version", osVersion },
             { "device_type", deviceModel },
             { "app_version", appVersion }
         };
