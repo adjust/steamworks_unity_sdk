@@ -121,7 +121,7 @@ public class AdjustSteamModule
         }
     }
 
-    public void TrackSession(Action<string> onResponse)
+    private void TrackSession(Action<string> onResponse)
     {
         if (string.IsNullOrEmpty(appToken))
         {
