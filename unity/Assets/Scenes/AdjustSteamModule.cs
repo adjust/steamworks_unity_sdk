@@ -75,7 +75,7 @@ public class AdjustSteamModule
         Debug.Log($"Parsed OS Info - Name: {deviceOSName}, Version: {deviceOSVersion}");
     }
 
-    public void Start(Action<string> onResponse)
+    public void InitSdk(Action<string> onResponse)
     {
         Debug.Log("Starting AdjustSteamModule - Tracking session.");
         TrackSession(response =>

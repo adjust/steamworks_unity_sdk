@@ -22,7 +22,7 @@ public class SteamScript : MonoBehaviour
             adjustSteamModule = new AdjustSteamModule("2fm9gkqubvpc", "sandbox", this);
 
             // Initialize the AdjustSteamModule
-            adjustSteamModule.Start(response =>
+            adjustSteamModule.InitSdk(response =>
             {
                 if (!string.IsNullOrEmpty(response))
                 {
