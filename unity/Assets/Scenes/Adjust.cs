@@ -12,13 +12,12 @@ using System.Text.RegularExpressions;
 public class Adjust
 {
     private const string AdjustBaseUrl = "https://app.adjust.com";
+    private static Adjust instance;
 
-    public string appToken { get; private set; }
-    public string environment { get; private set; }
+    private string appToken;
+    private string environment;
     private string steamId;
     private string steamUuid;
-
-    private bool isInitialized = false;
 
     // Additional device-specific parameters
     private string osName;
@@ -27,16 +26,20 @@ public class Adjust
     private string appVersion;
 
     // Private MonoBehaviour reference for coroutine execution
-    private readonly MonoBehaviour monoBehavior;
+    private MonoBehaviour monoBehavior;
 
-    public Adjust(string appToken, string environment, MonoBehaviour monoBehavior)
+    public static void InitSdk(string appToken, string environment, MonoBehaviour monoBehavior, Action<string> onResponse)
     {
-        if (isInitialized)
+        if (instance == null)
         {
-            Debug.LogWarning("Adjust is already initialized!");
-            return;
+            instance = new Adjust(appToken, environment, monoBehavior);
         }
 
+        instance.TrackSession(onResponse);
+    }
+
+    private Adjust(string appToken, string environment, MonoBehaviour monoBehavior)
+    {
         if (monoBehavior == null)
         {
             Debug.LogError("MonoBehaviour executor cannot be null.");
@@ -47,10 +50,19 @@ public class Adjust
         this.environment = environment;
         this.monoBehavior = monoBehavior;
 
+        InitializeDeviceInfo();
+        InitializeSteamInfo();
+    }
+
+    private void InitializeDeviceInfo()
+    {
         ParseDeviceOSInfo(SystemInfo.operatingSystem);
         deviceModel = SystemInfo.deviceModel;
         appVersion = Application.version;
+    }
 
+    private void InitializeSteamInfo()
+    {
         InitializeSteamUserId();
         RetrieveOrGenerateSteamUuid();
     }
@@ -69,26 +81,6 @@ public class Adjust
         osVersion = match.Success ? match.Value : "Unknown";
 
         Debug.Log($"Parsed OS Info - Name: {osName}, Version: {osVersion}");
-    }
-
-    public void InitSdk(Action<string> onResponse)
-    {
-        Debug.Log("Starting Adjust - Tracking session.");
-        TrackSession(response =>
-        {
-            isInitialized = true;
-            Debug.Log("Adjust initialized with AppToken and Environment.");
-
-            if (!string.IsNullOrEmpty(response))
-            {
-                onResponse?.Invoke(response);
-            }
-            else
-            {
-                Debug.LogError("TrackSession failed or returned no response.");
-                onResponse?.Invoke(null);
-            }
-        });
     }
 
     private void InitializeSteamUserId()
@@ -123,9 +115,9 @@ public class Adjust
 
     private void TrackSession(Action<string> onResponse)
     {
-        if (string.IsNullOrEmpty(appToken))
+        if (instance == null)
         {
-            Debug.LogError("AppToken is not set. Cannot track session.");
+            Debug.LogError("Adjust instance is not initialized. Call InitSdk first.");
             return;
         }
 
@@ -135,11 +127,22 @@ public class Adjust
         monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
     }
 
-    public void TrackEvent(string eventToken, Dictionary<string, object> parameters = null, Action<string> onResponse = null)
+    public static void TrackEvent(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
     {
-        if (!isInitialized || string.IsNullOrEmpty(eventToken))
+        if (instance == null)
         {
-            Debug.LogError("Adjust is not initialized or EventToken is not set. Cannot track event.");
+            Debug.LogError("Adjust instance is not initialized. Call InitSdk first.");
+            return;
+        }
+
+        instance.InternalTrackEvent(eventToken, parameters, onResponse);
+    }
+
+    private void InternalTrackEvent(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
+    {
+        if (string.IsNullOrEmpty(eventToken))
+        {
+            Debug.LogError("EventToken is missing. Cannot track event.");
             return;
         }
 
@@ -166,14 +169,19 @@ public class Adjust
         monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
     }
 
-    public void GetAttribution(Action<string> onResponse)
+    public static void GetAttribution(Action<string> onResponse)
     {
-        if (!isInitialized)
+        if (instance == null)
         {
-            Debug.LogError("Adjust is not initialized. Cannot request attribution.");
+            Debug.LogError("Adjust instance is not initialized. Call InitSdk first.");
             return;
         }
 
+        instance.InternalGetAttribution(onResponse);
+    }
+
+    private void InternalGetAttribution(Action<string> onResponse)
+    {
         string url = $"{AdjustBaseUrl}/attribution";
         Dictionary<string, string> payload = GenerateCommonPayload();
 
@@ -209,7 +217,7 @@ public class Adjust
     private string GetCurrentTimestamp()
     {
         DateTime now = DateTime.UtcNow;
-        return now.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z");
+        return now.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'");
     }
 
     private IEnumerator SendGetRequest(string url, Dictionary<string, string> payload, Action<string> onResponse)

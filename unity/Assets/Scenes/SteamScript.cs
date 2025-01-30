@@ -6,7 +6,6 @@ using Steamworks;
 
 public class SteamScript : MonoBehaviour
 {
-    private Adjust adjustSteamModule;
     public Button eventButton;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -16,15 +15,14 @@ public class SteamScript : MonoBehaviour
         if (SteamManager.Initialized)
         {
             // Pass 'this' as the MonoBehaviour executor
-            adjustSteamModule = new Adjust("2fm9gkqubvpc", "sandbox", this);
-            adjustSteamModule.InitSdk(response =>
+            Adjust.InitSdk("2fm9gkqubvpc", "sandbox", this, response =>
             {
                 if (!string.IsNullOrEmpty(response))
                 {
                     Debug.Log("Session Tracked Successfully with response: " + response);
 
                     // Call GetAttribution with a callback
-                    adjustSteamModule.GetAttribution(response =>
+                    Adjust.GetAttribution(response =>
                     {
                         if (!string.IsNullOrEmpty(response))
                         {
@@ -57,7 +55,7 @@ public class SteamScript : MonoBehaviour
             }
         };
 
-        adjustSteamModule.TrackEvent("34vgg9", parameters, response =>
+        Adjust.TrackEvent("34vgg9", parameters, response =>
         {
             if (!string.IsNullOrEmpty(response))
             {
