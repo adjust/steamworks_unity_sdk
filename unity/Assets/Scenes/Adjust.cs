@@ -124,7 +124,7 @@ public class Adjust
         string url = $"{AdjustBaseUrl}/session";
         Dictionary<string, string> payload = GenerateCommonPayload();
 
-        monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
+        monoBehavior.StartCoroutine(SendRequest(url, payload, onResponse));
     }
 
     public static void TrackEvent(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
@@ -166,7 +166,7 @@ public class Adjust
             }
         }
 
-        monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
+        monoBehavior.StartCoroutine(SendRequest(url, payload, onResponse));
     }
 
     public static void GetAttribution(Action<string> onResponse)
@@ -185,7 +185,7 @@ public class Adjust
         string url = $"{AdjustBaseUrl}/attribution";
         Dictionary<string, string> payload = GenerateCommonPayload();
 
-        monoBehavior.StartCoroutine(SendGetRequest(url, payload, onResponse));
+        monoBehavior.StartCoroutine(SendRequest(url, payload, onResponse, false));
     }
 
     private Dictionary<string, string> GenerateCommonPayload()
@@ -220,39 +220,56 @@ public class Adjust
         return now.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'");
     }
 
-    private IEnumerator SendGetRequest(string url, Dictionary<string, string> payload, Action<string> onResponse)
+    private IEnumerator SendRequest(string url, Dictionary<string, string> payload, Action<string> onResponse, bool isPost = true)
     {
-        var escapedPayload = payload.Select(kvp => 
+        UnityWebRequest request = isPost ? CreatePostRequest(url, payload) : CreateGetRequest(url, payload);
+        request.SetRequestHeader("Client-Sdk", "steam_unity0.0.1");
+        yield return request.SendWebRequest();
+        HandleRequestResponse(request, onResponse);
+    }
+
+    private UnityWebRequest CreatePostRequest(string url, Dictionary<string, string> payload)
+    {
+        WWWForm form = new WWWForm();
+        foreach (var kvp in payload)
         {
-            var escapedKey = UnityWebRequest.EscapeURL(kvp.Key);
-            var escapedValue = UnityWebRequest.EscapeURL(kvp.Value);
-            return $"{escapedKey}={escapedValue}";
-        });
-        string queryString = string.Join("&", escapedPayload);
-        string fullUrl = url + "?" + queryString;
+            form.AddField(kvp.Key, kvp.Value);
+        }
+        UnityWebRequest request = UnityWebRequest.Post(url, form);
+        request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        Debug.Log($"Created POST request to {url} with payload: {JsonConvert.SerializeObject(payload)}");
+        return request;
+    }
 
-        Debug.Log($"Sending GET request to {fullUrl}");
-
-        using (UnityWebRequest request = UnityWebRequest.Get(fullUrl))
+    private UnityWebRequest CreateGetRequest(string url, Dictionary<string, string> payload)
+    {
+        var queryString = new StringBuilder();
+        foreach (var kvp in payload)
         {
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("Client-Sdk", "steam_unity0.0.1");
-
-            yield return request.SendWebRequest();
-
-            Debug.Log("HTTP Status Code: " + request.responseCode);
-            Debug.Log("HTTP request result: " + request.result);
-
-            if (request.result == UnityWebRequest.Result.Success)
+            if (queryString.Length > 0)
             {
-                Debug.Log("HTTP request completed successfully: " + request.downloadHandler.text);
-                onResponse?.Invoke(request.downloadHandler.text);
+                queryString.Append("&");
             }
-            else
-            {
-                Debug.LogError($"HTTP request failed: {request.error}, Response: {request.downloadHandler.text}");
-                onResponse?.Invoke(null);
-            }
+            queryString.AppendFormat("{0}={1}", UnityWebRequest.EscapeURL(kvp.Key), UnityWebRequest.EscapeURL(kvp.Value));
+        }
+        string fullUrl = url + "?" + queryString.ToString();
+        UnityWebRequest request = UnityWebRequest.Get(fullUrl);
+        request.SetRequestHeader("Content-Type", "application/json");
+        Debug.Log($"Created GET request to {fullUrl}");
+        return request;
+    }
+
+    private void HandleRequestResponse(UnityWebRequest request, Action<string> onResponse)
+    {
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log("HTTP request completed successfully: " + request.downloadHandler.text);
+            onResponse?.Invoke(request.downloadHandler.text);
+        }
+        else
+        {
+            Debug.LogError($"HTTP request failed: {request.error}, Response: {request.downloadHandler.text}");
+            onResponse?.Invoke(null);
         }
     }
 }
