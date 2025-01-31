@@ -201,13 +201,21 @@ public class Adjust
             { "app_version", appVersion }
         };
 
+        if (string.IsNullOrEmpty(steamId))
+        {
+            InitializeSteamUserId();
+        }
+
         if (!string.IsNullOrEmpty(steamId))
         {
             payload.Add("steam_id", steamId);
         }
-
-        if (!string.IsNullOrEmpty(steamUuid))
+        else
         {
+            Debug.LogWarning("Steam User ID is missing. Skipping Steam ID parameter.");
+        }
+        
+        if (!string.IsNullOrEmpty(steamUuid))
             payload.Add("steam_uuid", steamUuid);
         }
 
