@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class SteamScript : MonoBehaviour
 {
     public Button eventButton;
+    private const string AdjustAppToken = "2fm9gkqubvpc";
+    private const string AdjustEnvironment = "sandbox";
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -14,11 +16,11 @@ public class SteamScript : MonoBehaviour
         if (SteamManager.Initialized)
         {
             // Pass 'this' as the MonoBehaviour executor
-            Adjust.InitSdk("2fm9gkqubvpc", "sandbox", this, response =>
+            Adjust.InitSdk(AdjustAppToken, AdjustEnvironment, this, response =>
             {
                 if (!string.IsNullOrEmpty(response))
                 {
-                    Debug.Log("Session Tracked Successfully with response: " + response);
+                    Debug.Log("Adjust Initialization response: " + response);
 
                     // Call GetAttribution with a callback
                     Adjust.GetAttribution(response =>
@@ -35,7 +37,7 @@ public class SteamScript : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError("Failed to track session.");
+                    Debug.LogError("Failed to initialize the Sdk.");
                 }
             });
         }
@@ -45,7 +47,8 @@ public class SteamScript : MonoBehaviour
     {
         var parameters = new Dictionary<string, object>
         {
-            { "custom_key", "custom_value" },
+            {"revenue", "149.99" },
+            { "currency", "USD" },
             { "callback_params", new Dictionary<string, object>
                 {
                     { "foo", "bar" },

@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 public class Adjust
@@ -115,12 +114,6 @@ public class Adjust
 
     private void TrackSession(Action<string> onResponse)
     {
-        if (instance == null)
-        {
-            Debug.LogError("Adjust instance is not initialized. Call InitSdk first.");
-            return;
-        }
-
         string url = $"{AdjustBaseUrl}/session";
         Dictionary<string, string> payload = GenerateCommonPayload();
 
@@ -214,8 +207,9 @@ public class Adjust
         {
             Debug.LogWarning("Steam User ID is missing. Skipping Steam ID parameter.");
         }
-        
+
         if (!string.IsNullOrEmpty(steamUuid))
+        {
             payload.Add("steam_uuid", steamUuid);
         }
 
