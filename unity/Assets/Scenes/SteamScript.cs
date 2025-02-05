@@ -15,7 +15,7 @@ public class SteamScript : MonoBehaviour
 
         if (SteamManager.Initialized)
         {
-            // Pass 'this' as the MonoBehaviour executor
+            // Pass 'this' as the MonoBehaviour
             Adjust.InitSdk(AdjustAppToken, AdjustEnvironment, this, response =>
             {
                 if (!string.IsNullOrEmpty(response))

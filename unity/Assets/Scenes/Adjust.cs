@@ -11,8 +11,8 @@ using System.Text.RegularExpressions;
 public class Adjust
 {
     private const string AdjustBaseUrl = "https://app.adjust.com";
-    private static Adjust instance;
 
+    private static Adjust defaultInstance;
     private string appToken;
     private string environment;
     private string steamId;
@@ -27,121 +27,96 @@ public class Adjust
     // Private MonoBehaviour reference for coroutine execution
     private MonoBehaviour monoBehavior;
 
-    public static void InitSdk(string appToken, string environment, MonoBehaviour monoBehavior, Action<string> onResponse)
-    {
-        if (instance == null)
-        {
-            instance = new Adjust(appToken, environment, monoBehavior);
-        }
-
-        instance.TrackSession(onResponse);
-    }
-
     private Adjust(string appToken, string environment, MonoBehaviour monoBehavior)
     {
-        if (monoBehavior == null)
-        {
-            Debug.LogError("MonoBehaviour executor cannot be null.");
-            throw new ArgumentNullException(nameof(monoBehavior), "MonoBehaviour executor is required to run coroutines.");
-        }
-
         this.appToken = appToken;
         this.environment = environment;
+        this.steamId = GetSteamId();
+        this.steamUuid = GetSteamUuid();
+        this.osName = GetOsName();
+        this.osVersion = GetOsVersion();
+        this.deviceModel = SystemInfo.deviceModel;
+        this.appVersion = Application.version;
         this.monoBehavior = monoBehavior;
-
-        InitializeDeviceInfo();
-        InitializeSteamInfo();
     }
 
-    private void InitializeDeviceInfo()
+    #region Public API
+    public static void InitSdk(string appToken, string environment, MonoBehaviour monoBehavior, Action<string> onResponse)
     {
-        ParseDeviceOSInfo(SystemInfo.operatingSystem);
-        deviceModel = SystemInfo.deviceModel;
-        appVersion = Application.version;
-    }
-
-    private void InitializeSteamInfo()
-    {
-        InitializeSteamUserId();
-        RetrieveOrGenerateSteamUuid();
-    }
-
-    private void ParseDeviceOSInfo(string operatingSystem)
-    {
-#if UNITY_STANDALONE_OSX
-        osName = "macos";
-#elif UNITY_STANDALONE_WIN
-        osName = "windows";
-#else
-        osName = "unsupported";
-#endif
-
-        var match = Regex.Match(operatingSystem, @"\d+(\.\d+)+");
-        osVersion = match.Success ? match.Value : "Unknown";
-
-        Debug.Log($"Parsed OS Info - Name: {osName}, Version: {osVersion}");
-    }
-
-    private void InitializeSteamUserId()
-    {
-        if (SteamManager.Initialized)
+        if (defaultInstance != null)
         {
-            CSteamID steamUserId = SteamUser.GetSteamID();
-            steamId = steamUserId.ToString();
-            Debug.Log("Steam User ID set: " + steamId);
+            onResponse?.Invoke("Adjust SDK already initialized");
+            Debug.LogError("[Adjust]: Adjust SDK already initialized");
+            return;
         }
-        else
+        if (IsAppTokenValid(appToken) == false)
         {
-            Debug.LogError("Steamworks is not initialized. Could not retrieve Steam User ID");
+            onResponse?.Invoke("App token is not valid");
+            Debug.LogError("[Adjust]: App token is not valid");
+            return;
         }
-    }
-
-    private void RetrieveOrGenerateSteamUuid()
-    {
-        if (PlayerPrefs.HasKey("SteamUuid"))
+        if (IsEnvironmentValid(environment) == false)
         {
-            steamUuid = PlayerPrefs.GetString("SteamUuid");
-            Debug.Log("Retrieved Steam Uuid from PlayerPrefs: " + steamUuid);
+            onResponse?.Invoke("Environment is not valid");
+            Debug.LogError("[Adjust]: Environment is not valid");
+            return;
         }
-        else
+        if (IsMonoBehaviorValid(monoBehavior) == false)
         {
-            steamUuid = Guid.NewGuid().ToString();
-            PlayerPrefs.SetString("SteamUuid", steamUuid);
-            PlayerPrefs.Save();
-            Debug.Log("Generated and saved new Steam Uuid: " + steamUuid);
+            onResponse?.Invoke("MonoBehaviour instance is not valid");
+            Debug.LogError("[Adjust]: MonoBehaviour instance is not valid");
+            return;
         }
-    }
 
-    private void TrackSession(Action<string> onResponse)
-    {
-        string url = $"{AdjustBaseUrl}/session";
-        Dictionary<string, string> payload = GenerateCommonPayload();
-
-        monoBehavior.StartCoroutine(SendRequest(url, payload, onResponse));
+        defaultInstance = new Adjust(appToken, environment, monoBehavior);
+        defaultInstance.TrackSessionInternal(onResponse);
     }
 
     public static void TrackEvent(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
     {
-        if (instance == null)
+        if (defaultInstance == null)
         {
-            Debug.LogError("Adjust instance is not initialized. Call InitSdk first.");
+            onResponse?.Invoke("Adjust SDK not initialized - call InitSdk first");
+            Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
             return;
         }
 
-        instance.InternalTrackEvent(eventToken, parameters, onResponse);
+        if (IsEventTokenValid(eventToken) == false)
+        {
+            onResponse?.Invoke("Event token is not valid");
+            Debug.LogError("[Adjust]: Event token is not valid");
+            return;
+        }
+
+        defaultInstance.TrackEventInternal(eventToken, parameters, onResponse);
     }
 
-    private void InternalTrackEvent(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
+    public static void GetAttribution(Action<string> onResponse)
     {
-        if (string.IsNullOrEmpty(eventToken))
+        if (defaultInstance == null)
         {
-            Debug.LogError("EventToken is missing. Cannot track event.");
+            onResponse?.Invoke("Adjust SDK not initialized - call InitSdk first");
+            Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
             return;
         }
 
+        defaultInstance.GetAttributionInternal(onResponse);
+    }
+    #endregion
+
+    #region SDK logic
+    private void TrackSessionInternal(Action<string> onResponse)
+    {
+        string url = $"{AdjustBaseUrl}/session";
+        monoBehavior.StartCoroutine(SendRequest(url, null, onResponse));
+    }
+
+    private void TrackEventInternal(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
+    {
         string url = $"{AdjustBaseUrl}/event";
-        Dictionary<string, string> payload = GenerateCommonPayload();
-        payload.Add("event_token", eventToken);
+
+        Dictionary<string, object> eventParameters = new Dictionary<string, object>();
+        eventParameters["event_token"] = eventToken;
 
         if (parameters != null)
         {
@@ -150,100 +125,62 @@ public class Adjust
                 if (param.Value is Dictionary<string, object>)
                 {
                     var nestedDict = param.Value as Dictionary<string, object>;
-                    payload.Add(param.Key, JsonConvert.SerializeObject(nestedDict));
+                    eventParameters.Add(param.Key, JsonConvert.SerializeObject(nestedDict));
                 }
                 else
                 {
-                    payload.Add(param.Key, param.Value?.ToString());
+                    eventParameters.Add(param.Key, param.Value?.ToString());
                 }
             }
         }
 
-        monoBehavior.StartCoroutine(SendRequest(url, payload, onResponse));
+        monoBehavior.StartCoroutine(SendRequest(url, eventParameters, onResponse));
     }
 
-    public static void GetAttribution(Action<string> onResponse)
-    {
-        if (instance == null)
-        {
-            Debug.LogError("Adjust instance is not initialized. Call InitSdk first.");
-            return;
-        }
-
-        instance.InternalGetAttribution(onResponse);
-    }
-
-    private void InternalGetAttribution(Action<string> onResponse)
+    private void GetAttributionInternal(Action<string> onResponse)
     {
         string url = $"{AdjustBaseUrl}/attribution";
-        Dictionary<string, string> payload = GenerateCommonPayload();
-
-        monoBehavior.StartCoroutine(SendRequest(url, payload, onResponse, false));
+        monoBehavior.StartCoroutine(SendRequest(url, null, onResponse, false));
     }
 
-    private Dictionary<string, string> GenerateCommonPayload()
+    private IEnumerator SendRequest(string url, Dictionary<string, object> payload, Action<string> onResponse, bool isPost = true)
     {
-        var payload = new Dictionary<string, string>
-        {
-            { "app_token", appToken },
-            { "environment", environment },
-            { "created_at", GetCurrentTimestamp() },
-            { "os_name", osName },
-            { "os_version", osVersion },
-            { "device_type", deviceModel },
-            { "app_version", appVersion }
-        };
+        Dictionary<string, string> commonPayload = GenerateCommonPayload();
+        Dictionary<string, object> mergedPayload = new Dictionary<string, object>();
 
-        if (string.IsNullOrEmpty(steamId))
+        foreach (var kvp in commonPayload)
         {
-            InitializeSteamUserId();
+            mergedPayload[kvp.Key] = kvp.Value;
         }
 
-        if (!string.IsNullOrEmpty(steamId))
+        if (payload != null)
         {
-            payload.Add("steam_id", steamId);
+            foreach (var kvp in payload)
+            {
+                mergedPayload[kvp.Key] = kvp.Value;
+            }
         }
-        else
-        {
-            Debug.LogWarning("Steam User ID is missing. Skipping Steam ID parameter.");
-        }
-
-        if (!string.IsNullOrEmpty(steamUuid))
-        {
-            payload.Add("steam_uuid", steamUuid);
-        }
-
-        return payload;
-    }
-
-    private string GetCurrentTimestamp()
-    {
-        DateTime now = DateTime.UtcNow;
-        return now.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'");
-    }
-
-    private IEnumerator SendRequest(string url, Dictionary<string, string> payload, Action<string> onResponse, bool isPost = true)
-    {
-        UnityWebRequest request = isPost ? CreatePostRequest(url, payload) : CreateGetRequest(url, payload);
+        UnityWebRequest request = isPost ? CreatePostRequest(url, mergedPayload) : CreateGetRequest(url, mergedPayload);
         request.SetRequestHeader("Client-Sdk", "steam_unity0.0.1");
         yield return request.SendWebRequest();
         HandleRequestResponse(request, onResponse);
     }
 
-    private UnityWebRequest CreatePostRequest(string url, Dictionary<string, string> payload)
+    private UnityWebRequest CreatePostRequest(string url, Dictionary<string, object> payload)
     {
         WWWForm form = new WWWForm();
         foreach (var kvp in payload)
         {
-            form.AddField(kvp.Key, kvp.Value);
+            form.AddField(kvp.Key, kvp.Value.ToString());
         }
+
         UnityWebRequest request = UnityWebRequest.Post(url, form);
         request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        Debug.Log($"Created POST request to {url} with payload: {JsonConvert.SerializeObject(payload)}");
+        Debug.Log($"Adjust]: Created POST request to {url} with payload: {JsonConvert.SerializeObject(payload)}");
         return request;
     }
 
-    private UnityWebRequest CreateGetRequest(string url, Dictionary<string, string> payload)
+    private UnityWebRequest CreateGetRequest(string url, Dictionary<string, object> payload)
     {
         var queryString = new StringBuilder();
         foreach (var kvp in payload)
@@ -252,12 +189,13 @@ public class Adjust
             {
                 queryString.Append("&");
             }
-            queryString.AppendFormat("{0}={1}", UnityWebRequest.EscapeURL(kvp.Key), UnityWebRequest.EscapeURL(kvp.Value));
+            queryString.AppendFormat("{0}={1}", UnityWebRequest.EscapeURL(kvp.Key), UnityWebRequest.EscapeURL(kvp.Value.ToString()));
         }
+
         string fullUrl = url + "?" + queryString.ToString();
         UnityWebRequest request = UnityWebRequest.Get(fullUrl);
         request.SetRequestHeader("Content-Type", "application/json");
-        Debug.Log($"Created GET request to {fullUrl}");
+        Debug.Log($"Adjust]: Created GET request to {fullUrl}");
         return request;
     }
 
@@ -274,4 +212,140 @@ public class Adjust
             onResponse?.Invoke(null);
         }
     }
+
+    private Dictionary<string, string> GenerateCommonPayload()
+    {
+        var payload = new Dictionary<string, string>
+        {
+            { "app_token", this.appToken },
+            { "environment", this.environment },
+            { "created_at", DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'") },
+            { "os_name", this.osName },
+            { "os_version", this.osVersion },
+            { "device_type", this.deviceModel },
+            { "app_version", this.appVersion },
+            { "sent_at", DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'") },
+        };
+
+        if (!string.IsNullOrEmpty(this.steamId))
+        {
+            payload.Add("steam_id", steamId);
+        }
+        else
+        {
+            payload.Add("steam_id", GetSteamId());
+        }
+
+        if (!string.IsNullOrEmpty(steamUuid))
+        {
+            payload.Add("steam_uuid", steamUuid);
+        }
+        else
+        {
+            payload.Add("steam_uuid", GetSteamUuid());
+        }
+
+        return payload;
+    }
+    #endregion
+
+    #region Device info
+    private string GetSteamId()
+    {
+        if (SteamManager.Initialized)
+        {
+            CSteamID steamId = SteamUser.GetSteamID();
+            Debug.Log("[Adjust]: steam_id read: " + steamId.ToString());
+            return steamId.ToString();
+        }
+        else
+        {
+            Debug.LogError("[Adjust]: SteamworksManager not initialized. Could not retrieve steam_id");
+            return null;
+        }
+    }
+
+    private string GetSteamUuid()
+    {
+        if (PlayerPrefs.HasKey("AdjustSteamUuid"))
+        {
+            string steamUuid = PlayerPrefs.GetString("AdjustSteamUuid");
+            Debug.Log("[Adjust]: Retrieved steam_uuid from PlayerPrefs: " + steamUuid);
+            return steamUuid;
+        }
+        else
+        {
+            string steamUuid = Guid.NewGuid().ToString();
+            PlayerPrefs.SetString("AdjustSteamUuid", steamUuid);
+            PlayerPrefs.Save();
+            Debug.Log("[Adjust]: Generated and saved new steam_uuid to PlayerPrefs: " + steamUuid);
+            return steamUuid;
+        }
+    }
+
+    private string GetOsName()
+    {
+#if UNITY_STANDALONE_OSX
+        return "macos";
+#elif UNITY_STANDALONE_WIN
+        return "windows";
+#elif UNITY_STANDALONE_LINUX
+        return "linux";
+#else
+        return "unknown";
+#endif
+    }
+
+    private string GetOsVersion()
+    {
+        var match = Regex.Match(SystemInfo.operatingSystem, @"\d+(\.\d+)+");
+        return match.Success ? match.Value : "unknown";
+    }
+    #endregion
+
+    #region Helper methods
+    private static bool IsAppTokenValid(string appToken)
+    {
+        if (string.IsNullOrEmpty(appToken))
+        {
+            return false;
+        }
+        if (appToken.Length != 12)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private static bool IsEnvironmentValid(string environment)
+    {
+        if (string.IsNullOrEmpty(environment))
+        {
+            return false;
+        }
+        if (environment != "sandbox" && environment != "production")
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private static bool IsMonoBehaviorValid(MonoBehaviour monoBehavior)
+    {
+        if (monoBehavior == null)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private static bool IsEventTokenValid(string eventToken)
+    {
+        if (string.IsNullOrEmpty(eventToken))
+        {
+            return false;
+        }
+        return true;
+    }
+    #endregion
 }
