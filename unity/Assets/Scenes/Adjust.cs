@@ -41,17 +41,15 @@ public class Adjust
     }
 
     #region Public API
-    public static void InitSdk(AdjustConfig adjustConfig, Action<string> onResponse)
+    public static void InitSdk(AdjustConfig adjustConfig, Action<AdjustResponse> onResponse)
     {
         if (defaultInstance != null)
         {
-            onResponse?.Invoke("Adjust SDK already initialized");
             Debug.LogError("[Adjust]: Adjust SDK already initialized");
             return;
         }
         if (IsAdjustConfigValid(adjustConfig) == false)
         { 
-            onResponse?.Invoke("Adjust Config is not valid");
             Debug.LogError("[Adjust]: Adjust Config is not valid");
             return;
         }
@@ -60,11 +58,10 @@ public class Adjust
         defaultInstance.TrackSessionInternal(onResponse);
     }
 
-    public static void TrackEvent(AdjustEvent adjustEvent, Action<string> onResponse)
+    public static void TrackEvent(AdjustEvent adjustEvent, Action<AdjustResponse> onResponse)
     {
         if (defaultInstance == null)
         {
-            onResponse?.Invoke("Adjust SDK not initialized - call InitSdk first");
             Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
             return;
         }
@@ -72,11 +69,10 @@ public class Adjust
         defaultInstance.TrackEventInternal(adjustEvent, onResponse);
     }
 
-    public static void GetAttribution(Action<string> onResponse)
+    public static void GetAttribution(Action<AdjustResponse> onResponse)
     {
         if (defaultInstance == null)
         {
-            onResponse?.Invoke("Adjust SDK not initialized - call InitSdk first");
             Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
             return;
         }
@@ -86,13 +82,13 @@ public class Adjust
     #endregion
 
     #region SDK logic
-    private void TrackSessionInternal(Action<string> onResponse)
+    private void TrackSessionInternal(Action<AdjustResponse> onResponse)
     {
         string url = $"{AdjustBaseUrl}/session";
         monoBehavior.StartCoroutine(SendRequest(url, null, onResponse));
     }
 
-    private void TrackEventInternal(AdjustEvent adjustEvent, Action<string> onResponse)
+    private void TrackEventInternal(AdjustEvent adjustEvent, Action<AdjustResponse> onResponse)
     {
         if (IsAdjustEventValid(adjustEvent) == false)
         {
@@ -124,13 +120,13 @@ public class Adjust
         monoBehavior.StartCoroutine(SendRequest(url, eventParameters, onResponse));
     }
 
-    private void GetAttributionInternal(Action<string> onResponse)
+    private void GetAttributionInternal(Action<AdjustResponse> onResponse)
     {
         string url = $"{AdjustBaseUrl}/attribution";
         monoBehavior.StartCoroutine(SendRequest(url, null, onResponse, false));
     }
 
-    private IEnumerator SendRequest(string url, Dictionary<string, object> payload, Action<string> onResponse, bool isPost = true)
+    private IEnumerator SendRequest(string url, Dictionary<string, object> payload, Action<AdjustResponse> onResponse, bool isPost = true)
     {
         Dictionary<string, string> commonPayload = GenerateCommonPayload();
         Dictionary<string, object> mergedPayload = new Dictionary<string, object>();
@@ -186,18 +182,54 @@ public class Adjust
         return request;
     }
 
-    private void HandleRequestResponse(UnityWebRequest request, Action<string> onResponse)
+    private void HandleRequestResponse(UnityWebRequest request, Action<AdjustResponse> onResponse)
     {
-        if (request.result == UnityWebRequest.Result.Success)
+        AdjustResponse adjustResponse = ParseResponse(request);
+        if (adjustResponse != null)
         {
-            Debug.Log("HTTP request completed successfully: " + request.downloadHandler.text);
-            onResponse?.Invoke(request.downloadHandler.text);
+            Debug.Log("[Adjust]: HTTP request completed successfully: " + request.downloadHandler.text);
+            onResponse?.Invoke(adjustResponse);
         }
         else
         {
-            Debug.LogError($"HTTP request failed: {request.error}, Response: {request.downloadHandler.text}");
+            Debug.LogError($"[Adjust]: HTTP request failed: {request.error}, Response: {request.downloadHandler.text}");
             onResponse?.Invoke(null);
         }
+    }
+
+    private AdjustResponse ParseResponse(UnityWebRequest request)
+    {
+        long responseCode = request.responseCode;
+        string responseText = request.downloadHandler.text;
+
+        AdjustResponse adjustResponse = new AdjustResponse
+        {
+            ResponseCode = responseCode,
+            ResponseText = responseText
+        };
+
+        if (!string.IsNullOrEmpty(responseText))
+        {
+            try
+            {
+                adjustResponse.JsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseText);
+                if (adjustResponse.JsonResponse.TryGetValue("message", out var message))
+                    adjustResponse.Message = message.ToString();
+                if (adjustResponse.JsonResponse.TryGetValue("timestamp", out var timestamp))
+                    adjustResponse.Timestamp = timestamp.ToString();
+                if (adjustResponse.JsonResponse.TryGetValue("adid", out var adid))
+                    adjustResponse.Adid = adid.ToString();
+                if (adjustResponse.JsonResponse.TryGetValue("error", out var error))
+                    adjustResponse.Error = error.ToString();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[Adjust]: Failed to parse Adjust response JSON: " + ex.Message);
+                return null;
+            }
+        }
+
+        return adjustResponse;
     }
 
     private Dictionary<string, string> GenerateCommonPayload()

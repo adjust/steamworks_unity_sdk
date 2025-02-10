@@ -9,7 +9,7 @@ public class SteamScript : MonoBehaviour
     public Button eventButton;
     private const string AdjustAppToken = "2fm9gkqubvpc";
     private const string AdjustEnvironment = "sandbox";
-    
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -23,26 +23,26 @@ public class SteamScript : MonoBehaviour
             // Adjust SDK initialization
             Adjust.InitSdk(adjustConfig, response =>
             {
-                if (!string.IsNullOrEmpty(response))
+                if (response != null)
                 {
-                    Debug.Log("Adjust Initialization response: " + response);
-
-                    // Call GetAttribution with a callback
-                    Adjust.GetAttribution(response =>
-                    {
-                        if (!string.IsNullOrEmpty(response))
-                        {
-                            Debug.Log("Attribution Response: " + response);
-                        }
-                        else
-                        {
-                            Debug.LogError("GetAttribution failed or returned no response.");
-                        }
-                    });
+                    Debug.Log($"Adjust SDK Initialized. Response Code: {response.ResponseCode}, Response: {response.ResponseText}, JsonResponse: {response.GetSerializedJsonResponse()}");
                 }
                 else
                 {
-                    Debug.LogError("Failed to initialize the Sdk.");
+                    Debug.LogError("Adjust SDK initialization failed.");
+                }
+            });
+
+            // Call GetAttribution with a callback
+            Adjust.GetAttribution(response =>
+            {
+                if (response != null)
+                {
+                    Debug.Log($"Attribution Response: Response Code: {response.ResponseCode}, Response: {response.ResponseText}, JsonResponse: {response.GetSerializedJsonResponse()}");
+                }
+                else
+                {
+                    Debug.LogError("GetAttribution failed or returned no response.");
                 }
             });
         }
@@ -67,13 +67,13 @@ public class SteamScript : MonoBehaviour
         // Track an event
         Adjust.TrackEvent(adjustEvent, response =>
         {
-            if (!string.IsNullOrEmpty(response))
+            if (response != null)
             {
-                Debug.Log("Event Tracking Response: " + response);
+                Debug.Log($"Event Tracking Response: Response Code: {response.ResponseCode}, Response: {response.ResponseText}, JsonResponse: {response.GetSerializedJsonResponse()}");
             }
             else
             {
-                Debug.LogError("Failed to track event.");
+                Debug.LogError("Event tracking failed or returned no response.");
             }
         });
 
