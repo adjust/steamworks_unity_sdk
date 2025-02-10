@@ -27,21 +27,21 @@ public class Adjust
     // Private MonoBehaviour reference for coroutine execution
     private MonoBehaviour monoBehavior;
 
-    private Adjust(string appToken, string environment, MonoBehaviour monoBehavior)
+    private Adjust(AdjustConfig adjustConfig)
     {
-        this.appToken = appToken;
-        this.environment = environment;
+        this.appToken = adjustConfig.AppToken;
+        this.environment = adjustConfig.Environment;
         this.steamId = GetSteamId();
         this.steamUuid = GetSteamUuid();
         this.osName = GetOsName();
         this.osVersion = GetOsVersion();
         this.deviceModel = SystemInfo.deviceModel;
         this.appVersion = Application.version;
-        this.monoBehavior = monoBehavior;
+        this.monoBehavior = adjustConfig.MonoBehaviour;
     }
 
     #region Public API
-    public static void InitSdk(string appToken, string environment, MonoBehaviour monoBehavior, Action<string> onResponse)
+    public static void InitSdk(AdjustConfig adjustConfig, Action<string> onResponse)
     {
         if (defaultInstance != null)
         {
@@ -49,30 +49,18 @@ public class Adjust
             Debug.LogError("[Adjust]: Adjust SDK already initialized");
             return;
         }
-        if (IsAppTokenValid(appToken) == false)
-        {
-            onResponse?.Invoke("App token is not valid");
-            Debug.LogError("[Adjust]: App token is not valid");
-            return;
-        }
-        if (IsEnvironmentValid(environment) == false)
-        {
-            onResponse?.Invoke("Environment is not valid");
-            Debug.LogError("[Adjust]: Environment is not valid");
-            return;
-        }
-        if (IsMonoBehaviorValid(monoBehavior) == false)
-        {
-            onResponse?.Invoke("MonoBehaviour instance is not valid");
-            Debug.LogError("[Adjust]: MonoBehaviour instance is not valid");
+        if (IsAdjustConfigValid(adjustConfig) == false)
+        { 
+            onResponse?.Invoke("Adjust Config is not valid");
+            Debug.LogError("[Adjust]: Adjust Config is not valid");
             return;
         }
 
-        defaultInstance = new Adjust(appToken, environment, monoBehavior);
+        defaultInstance = new Adjust(adjustConfig);
         defaultInstance.TrackSessionInternal(onResponse);
     }
 
-    public static void TrackEvent(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
+    public static void TrackEvent(AdjustEvent adjustEvent, Action<string> onResponse)
     {
         if (defaultInstance == null)
         {
@@ -80,15 +68,8 @@ public class Adjust
             Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
             return;
         }
-
-        if (IsEventTokenValid(eventToken) == false)
-        {
-            onResponse?.Invoke("Event token is not valid");
-            Debug.LogError("[Adjust]: Event token is not valid");
-            return;
-        }
-
-        defaultInstance.TrackEventInternal(eventToken, parameters, onResponse);
+       
+        defaultInstance.TrackEventInternal(adjustEvent, onResponse);
     }
 
     public static void GetAttribution(Action<string> onResponse)
@@ -111,25 +92,31 @@ public class Adjust
         monoBehavior.StartCoroutine(SendRequest(url, null, onResponse));
     }
 
-    private void TrackEventInternal(string eventToken, Dictionary<string, object> parameters, Action<string> onResponse)
+    private void TrackEventInternal(AdjustEvent adjustEvent, Action<string> onResponse)
     {
+        if (IsAdjustEventValid(adjustEvent) == false)
+        {
+            Debug.LogError("[Adjust]: AdjustEvent cannot be null.");
+            return;
+        }
+
         string url = $"{AdjustBaseUrl}/event";
 
-        Dictionary<string, object> eventParameters = new Dictionary<string, object>();
-        eventParameters["event_token"] = eventToken;
-
-        if (parameters != null)
+        Dictionary<string, object> eventDictionary = adjustEvent.GetEventDictionary();
+        var eventParameters = new Dictionary<string, object>();
+      
+        if (eventDictionary != null)
         {
-            foreach (var param in parameters)
+            foreach (var param in eventDictionary)
             {
                 if (param.Value is Dictionary<string, object>)
                 {
                     var nestedDict = param.Value as Dictionary<string, object>;
-                    eventParameters.Add(param.Key, JsonConvert.SerializeObject(nestedDict));
+                    eventParameters[param.Key] = JsonConvert.SerializeObject(nestedDict);
                 }
                 else
                 {
-                    eventParameters.Add(param.Key, param.Value?.ToString());
+                    eventParameters[param.Key] = param.Value;
                 }
             }
         }
@@ -227,7 +214,7 @@ public class Adjust
             { "sent_at", DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'") },
         };
 
-        if (!string.IsNullOrEmpty(this.steamId))
+        if (!string.IsNullOrEmpty(steamId))
         {
             payload.Add("steam_id", steamId);
         }
@@ -304,44 +291,18 @@ public class Adjust
     #endregion
 
     #region Helper methods
-    private static bool IsAppTokenValid(string appToken)
+    private static bool IsAdjustEventValid(AdjustEvent adjustEvent)
     {
-        if (string.IsNullOrEmpty(appToken))
-        {
-            return false;
-        }
-        if (appToken.Length != 12)
+        if (adjustEvent == null)
         {
             return false;
         }
         return true;
     }
 
-    private static bool IsEnvironmentValid(string environment)
+    private static bool IsAdjustConfigValid(AdjustConfig adjustConfig)
     {
-        if (string.IsNullOrEmpty(environment))
-        {
-            return false;
-        }
-        if (environment != "sandbox" && environment != "production")
-        {
-            return false;
-        }
-        return true;
-    }
-
-    private static bool IsMonoBehaviorValid(MonoBehaviour monoBehavior)
-    {
-        if (monoBehavior == null)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    private static bool IsEventTokenValid(string eventToken)
-    {
-        if (string.IsNullOrEmpty(eventToken))
+        if (adjustConfig == null)
         {
             return false;
         }

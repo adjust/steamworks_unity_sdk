@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Steamworks;
 
 public class SteamScript : MonoBehaviour
 {
     public Button eventButton;
     private const string AdjustAppToken = "2fm9gkqubvpc";
     private const string AdjustEnvironment = "sandbox";
+    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -15,8 +17,11 @@ public class SteamScript : MonoBehaviour
 
         if (SteamManager.Initialized)
         {
-            // Pass 'this' as the MonoBehaviour
-            Adjust.InitSdk(AdjustAppToken, AdjustEnvironment, this, response =>
+            // Create AdjustConfig with app token, environment, and the current MonoBehaviour instance
+            AdjustConfig adjustConfig = new AdjustConfig(AdjustAppToken, AdjustEnvironment, this);
+
+            // Adjust SDK initialization
+            Adjust.InitSdk(adjustConfig, response =>
             {
                 if (!string.IsNullOrEmpty(response))
                 {
@@ -45,28 +50,32 @@ public class SteamScript : MonoBehaviour
 
     void TrackEventOnClick()
     {
-        var parameters = new Dictionary<string, object>
-        {
-            {"revenue", "149.99" },
-            { "currency", "USD" },
-            { "callback_params", new Dictionary<string, object>
-                {
-                    { "foo", "bar" },
-                    { "master", "yoda" }
-                }
-            }
-        };
+        // Create an AdjustEvent object with an event token
+        AdjustEvent adjustEvent = new AdjustEvent("34vgg9");
 
-        Adjust.TrackEvent("34vgg9", parameters, response =>
+        // Add Revenue and Currency
+        adjustEvent.SetRevenue(150, "USD");
+
+        // Add custom callback parameters
+        adjustEvent.AddCallbackParameter("player_id", "123456");
+        adjustEvent.AddCallbackParameter("purchase_type", "gold");
+
+        // Add partner parameters
+        adjustEvent.AddPartnerParameter("currency", "USD");
+        adjustEvent.AddPartnerParameter("amount", "9.99");
+
+        // Track an event
+        Adjust.TrackEvent(adjustEvent, response =>
         {
             if (!string.IsNullOrEmpty(response))
             {
-                Debug.Log("Event Response: " + response);
+                Debug.Log("Event Tracking Response: " + response);
             }
             else
             {
                 Debug.LogError("Failed to track event.");
             }
         });
+
     }
 }
