@@ -25,7 +25,7 @@ public class SteamScript : MonoBehaviour
             {
                 if (response != null)
                 {
-                    Debug.Log($"Adjust SDK Initialized. Response Code: {response.ResponseCode}, Response: {response.ResponseText}, JsonResponse: {response.GetSerializedJsonResponse()}");
+                    Debug.Log($"Adjust SDK Initialized. Response Code: {response.ResponseCode}, Response: {response.ResponseBody}, JsonResponse: {response.GetSerializedJsonResponse()}");
                 }
                 else
                 {
@@ -38,7 +38,7 @@ public class SteamScript : MonoBehaviour
             {
                 if (response != null)
                 {
-                    Debug.Log($"Attribution Response: Response Code: {response.ResponseCode}, Response: {response.ResponseText}, JsonResponse: {response.GetSerializedJsonResponse()}");
+                    Debug.Log($"Attribution Response: Response Code: {response.ResponseCode}, Response: {response.ResponseBody}, JsonResponse: {response.GetSerializedJsonResponse()}");
                 }
                 else
                 {
@@ -58,18 +58,16 @@ public class SteamScript : MonoBehaviour
 
         // Add custom callback parameters
         adjustEvent.AddCallbackParameter("player_id", "123456");
-        adjustEvent.AddCallbackParameter("purchase_type", "gold");
 
         // Add partner parameters
-        adjustEvent.AddPartnerParameter("currency", "USD");
-        adjustEvent.AddPartnerParameter("amount", "9.99");
+        adjustEvent.AddPartnerParameter("foo", "bar");
 
         // Track an event
         Adjust.TrackEvent(adjustEvent, response =>
         {
             if (response != null)
             {
-                Debug.Log($"Event Tracking Response: Response Code: {response.ResponseCode}, Response: {response.ResponseText}, JsonResponse: {response.GetSerializedJsonResponse()}");
+                Debug.Log($"Event Tracking Response: Response Code: {response.ResponseCode}, Response: {response.ResponseBody}, JsonResponse: {response.GetSerializedJsonResponse()}");
             }
             else
             {

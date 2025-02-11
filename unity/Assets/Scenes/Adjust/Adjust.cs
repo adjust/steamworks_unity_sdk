@@ -200,19 +200,19 @@ public class Adjust
     private AdjustResponse ParseResponse(UnityWebRequest request)
     {
         long responseCode = request.responseCode;
-        string responseText = request.downloadHandler.text;
+        string ResponseBody = request.downloadHandler.text;
 
         AdjustResponse adjustResponse = new AdjustResponse
         {
             ResponseCode = responseCode,
-            ResponseText = responseText
+            ResponseBody = ResponseBody
         };
 
-        if (!string.IsNullOrEmpty(responseText))
+        if (!string.IsNullOrEmpty(ResponseBody))
         {
             try
             {
-                adjustResponse.JsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseText);
+                adjustResponse.JsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(ResponseBody);
                 if (adjustResponse.JsonResponse.TryGetValue("message", out var message))
                     adjustResponse.Message = message.ToString();
                 if (adjustResponse.JsonResponse.TryGetValue("timestamp", out var timestamp))

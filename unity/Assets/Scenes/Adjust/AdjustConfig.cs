@@ -9,37 +9,43 @@ public class AdjustConfig
 
     public AdjustConfig(string appToken, string environment, MonoBehaviour monoBehaviour)
     {
-        if (IsAppTokenValid(appToken) == false)
+        if (!IsConfigValid(appToken, environment, monoBehaviour))
         {
-            Debug.LogError("[Adjust]: App token is not valid");
-            return;
-        }
-
-        if (IsEnvironmentValid(environment) == false)
-        {
-            Debug.LogError("[Adjust]: Environment is not valid");
-            return;
-        }
-
-        if (IsMonoBehaviourValid(monoBehaviour) == false)
-        {
-            Debug.LogError("[Adjust]: MonoBehaviour instance is not valid");
             return;
         }
 
         AppToken = appToken;
         Environment = environment;
-        MonoBehaviour = monoBehaviour;
+        MonoBehaviour= monoBehaviour;
     }
 
     #region Helper methods
+    private bool IsConfigValid(string appToken, string environment, MonoBehaviour monoBehaviourInstance)
+    {
+        if (!IsAppTokenValid(appToken))
+        {
+            Debug.LogError("[Adjust]: App token is not valid");
+            return false;
+        }
+
+        if (!IsEnvironmentValid(environment))
+        {
+            Debug.LogError("[Adjust]: Environment is not valid");
+            return false;
+        }
+
+        if (!IsMonoBehaviourValid(monoBehaviourInstance))
+        {
+            Debug.LogError("[Adjust]: MonoBehaviour instance is not valid");
+            return false;
+        }
+
+        return true;
+    }
+    
     private static bool IsAppTokenValid(string appToken)
     {
         if (string.IsNullOrEmpty(appToken))
-        {
-            return false;
-        }
-        if (appToken.Length != 12)
         {
             return false;
         }
@@ -59,9 +65,9 @@ public class AdjustConfig
         return true;
     }
 
-    private static bool IsMonoBehaviourValid(MonoBehaviour monoBehavior)
+    private static bool IsMonoBehaviourValid(MonoBehaviour monoBehaviour)
     {
-        if (monoBehavior == null)
+        if (monoBehaviour == null)
         {
             return false;
         }

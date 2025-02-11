@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using Newtonsoft.Json;
 
 public class AdjustEvent
@@ -14,10 +13,9 @@ public class AdjustEvent
 
     public AdjustEvent(string eventToken)
     {
-        if (IsEventTokenValid(eventToken) == false)
+        if (!IsEventTokenValid(eventToken))
         {
-            Debug.LogError("[Adjust]: Event token cannot be null or empty.");
-            return;
+            throw new ArgumentException("[Adjust]: Event token cannot be null or empty.");
         }
 
         EventToken = eventToken;
@@ -51,6 +49,10 @@ public class AdjustEvent
 
     public void SetRevenue(double revenue, string currency)
     {
+        if (string.IsNullOrEmpty(currency))
+        {
+            throw new ArgumentException("[Adjust]: Currency cannot be null or empty.");
+        }
         Revenue = revenue;
         Currency = currency;
     }
