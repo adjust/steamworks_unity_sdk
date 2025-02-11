@@ -160,7 +160,7 @@ public class Adjust
 
         UnityWebRequest request = UnityWebRequest.Post(url, form);
         request.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        Debug.Log($"Adjust]: Created POST request to {url} with payload: {JsonConvert.SerializeObject(payload)}");
+        Debug.Log($"[Adjust]: Created POST request to {url} with payload: {JsonConvert.SerializeObject(payload)}");
         return request;
     }
 
@@ -179,7 +179,7 @@ public class Adjust
         string fullUrl = url + "?" + queryString.ToString();
         UnityWebRequest request = UnityWebRequest.Get(fullUrl);
         request.SetRequestHeader("Content-Type", "application/json");
-        Debug.Log($"Adjust]: Created GET request to {fullUrl}");
+        Debug.Log($"[Adjust]: Created GET request to {fullUrl}");
         return request;
     }
 
@@ -201,32 +201,40 @@ public class Adjust
     private AdjustResponseData ParseResponse(UnityWebRequest request)
     {
         long responseCode = request.responseCode;
-        string ResponseBody = request.downloadHandler.text;
+        string responseBody = request.downloadHandler.text;
 
         AdjustResponseData adjustResponse = new AdjustResponseData
         {
             ResponseCode = responseCode,
-            ResponseBody = ResponseBody
+            ResponseBody = responseBody
         };
 
-        if (!string.IsNullOrEmpty(ResponseBody))
+        if (!string.IsNullOrEmpty(responseBody))
         {
             try
             {
-                adjustResponse.JsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(ResponseBody);
+                adjustResponse.JsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseBody);
                 if (adjustResponse.JsonResponse.TryGetValue("message", out var message))
+                {
                     adjustResponse.Message = message.ToString();
+                }
                 if (adjustResponse.JsonResponse.TryGetValue("timestamp", out var timestamp))
+                {
                     adjustResponse.Timestamp = timestamp.ToString();
+                }
                 if (adjustResponse.JsonResponse.TryGetValue("adid", out var adid))
+                {
                     adjustResponse.Adid = adid.ToString();
+                }
                 if (adjustResponse.JsonResponse.TryGetValue("error", out var error))
+                {
                     adjustResponse.Error = error.ToString();
+                }
                 if (adjustResponse.JsonResponse.TryGetValue("attribution", out var attributionObj))
                 {
                     if (attributionObj is JObject attributionJson)
                     {
-                        adjustResponse.Attribution = attributionJson.ToObject<AttributionData>();
+                        adjustResponse.AttributionData = attributionJson.ToObject<AttributionData>();
                     }
                     else
                     {

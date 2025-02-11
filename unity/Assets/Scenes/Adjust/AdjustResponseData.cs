@@ -11,12 +11,12 @@ public class AdjustResponseData
     public string Adid { get; set; }
     public string Error { get; set; }
     public Dictionary<string, object> JsonResponse { get; set; }
-    public AttributionData Attribution { get; set; }
+    public AttributionData AttributionData { get; set; }
 
     public AdjustResponseData()
     {
         JsonResponse = new Dictionary<string, object>();
-        Attribution = new AttributionData();
+        AttributionData = new AttributionData();
     }
 
     public string GetSerializedJsonResponse()

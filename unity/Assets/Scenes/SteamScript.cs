@@ -41,11 +41,11 @@ public class SteamScript : MonoBehaviour
                     Debug.Log($"Attribution Response: Response Code: {response.ResponseCode}, Response: {response.ResponseBody}, JsonResponse: {response.GetSerializedJsonResponse()}");
 
                     // Extract and log attribution data
-                    if (response.Attribution != null)
+                    if (response.AttributionData != null)
                     {
-                        Debug.Log($"Tracker Token: {response.Attribution.TrackerToken}");
-                        Debug.Log($"Tracker Name: {response.Attribution.TrackerName}");
-                        Debug.Log($"Network: {response.Attribution.Network}");
+                        Debug.Log($"Tracker Token: {response.AttributionData.TrackerToken}");
+                        Debug.Log($"Tracker Name: {response.AttributionData.TrackerName}");
+                        Debug.Log($"Network: {response.AttributionData.Network}");
                     }
                 }
                 else
