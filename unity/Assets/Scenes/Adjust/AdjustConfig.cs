@@ -11,6 +11,7 @@ public class AdjustConfig
     {
         if (!IsConfigValid(appToken, environment, monoBehaviour))
         {
+            Debug.LogError("[Adjust]: Config is not valid");
             return;
         }
 

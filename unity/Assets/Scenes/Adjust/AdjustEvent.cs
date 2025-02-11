@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using UnityEngine;
 
 public class AdjustEvent
 {
@@ -15,7 +16,8 @@ public class AdjustEvent
     {
         if (!IsEventTokenValid(eventToken))
         {
-            throw new ArgumentException("[Adjust]: Event token cannot be null or empty.");
+            Debug.LogError("[Adjust]: Event token cannot be null or empty.");
+            return;
         }
 
         EventToken = eventToken;
@@ -31,7 +33,8 @@ public class AdjustEvent
         }
         else
         {
-            throw new ArgumentException("[Adjust]: Callback parameter key or value cannot be null or empty.");
+            Debug.LogError("[Adjust]: Callback parameter key or value cannot be null or empty.");
+            return;
         }
     }
 
@@ -43,16 +46,25 @@ public class AdjustEvent
         }
         else
         {
-            throw new ArgumentException("[Adjust]: Partner parameter key or value cannot be null or empty.");
+            Debug.LogError("[Adjust]: Partner parameter key or value cannot be null or empty.");
+            return;
         }
     }
 
     public void SetRevenue(double revenue, string currency)
     {
+        if (revenue <= 0)
+        {
+            Debug.LogError("[Adjust]: Revenue value is invalid.");
+            return;
+        }
+
         if (string.IsNullOrEmpty(currency))
         {
-            throw new ArgumentException("[Adjust]: Currency cannot be null or empty.");
+            Debug.LogError("[Adjust]: Currency must be set with revenue.");
+            return;
         }
+
         Revenue = revenue;
         Currency = currency;
     }

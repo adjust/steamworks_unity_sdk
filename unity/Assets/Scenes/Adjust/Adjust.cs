@@ -3,6 +3,7 @@ using System.Text;
 using UnityEngine;
 using Steamworks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ public class Adjust
     }
 
     #region Public API
-    public static void InitSdk(AdjustConfig adjustConfig, Action<AdjustResponse> onResponse)
+    public static void InitSdk(AdjustConfig adjustConfig, Action<AdjustResponseData> onResponse)
     {
         if (defaultInstance != null)
         {
@@ -49,7 +50,7 @@ public class Adjust
             return;
         }
         if (IsAdjustConfigValid(adjustConfig) == false)
-        { 
+        {
             Debug.LogError("[Adjust]: Adjust Config is not valid");
             return;
         }
@@ -58,18 +59,18 @@ public class Adjust
         defaultInstance.TrackSessionInternal(onResponse);
     }
 
-    public static void TrackEvent(AdjustEvent adjustEvent, Action<AdjustResponse> onResponse)
+    public static void TrackEvent(AdjustEvent adjustEvent, Action<AdjustResponseData> onResponse)
     {
         if (defaultInstance == null)
         {
             Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
             return;
         }
-       
+
         defaultInstance.TrackEventInternal(adjustEvent, onResponse);
     }
 
-    public static void GetAttribution(Action<AdjustResponse> onResponse)
+    public static void GetAttribution(Action<AdjustResponseData> onResponse)
     {
         if (defaultInstance == null)
         {
@@ -82,13 +83,13 @@ public class Adjust
     #endregion
 
     #region SDK logic
-    private void TrackSessionInternal(Action<AdjustResponse> onResponse)
+    private void TrackSessionInternal(Action<AdjustResponseData> onResponse)
     {
         string url = $"{AdjustBaseUrl}/session";
         monoBehavior.StartCoroutine(SendRequest(url, null, onResponse));
     }
 
-    private void TrackEventInternal(AdjustEvent adjustEvent, Action<AdjustResponse> onResponse)
+    private void TrackEventInternal(AdjustEvent adjustEvent, Action<AdjustResponseData> onResponse)
     {
         if (IsAdjustEventValid(adjustEvent) == false)
         {
@@ -100,7 +101,7 @@ public class Adjust
 
         Dictionary<string, object> eventDictionary = adjustEvent.GetEventDictionary();
         var eventParameters = new Dictionary<string, object>();
-      
+
         if (eventDictionary != null)
         {
             foreach (var param in eventDictionary)
@@ -120,13 +121,13 @@ public class Adjust
         monoBehavior.StartCoroutine(SendRequest(url, eventParameters, onResponse));
     }
 
-    private void GetAttributionInternal(Action<AdjustResponse> onResponse)
+    private void GetAttributionInternal(Action<AdjustResponseData> onResponse)
     {
         string url = $"{AdjustBaseUrl}/attribution";
         monoBehavior.StartCoroutine(SendRequest(url, null, onResponse, false));
     }
 
-    private IEnumerator SendRequest(string url, Dictionary<string, object> payload, Action<AdjustResponse> onResponse, bool isPost = true)
+    private IEnumerator SendRequest(string url, Dictionary<string, object> payload, Action<AdjustResponseData> onResponse, bool isPost = true)
     {
         Dictionary<string, string> commonPayload = GenerateCommonPayload();
         Dictionary<string, object> mergedPayload = new Dictionary<string, object>();
@@ -182,9 +183,9 @@ public class Adjust
         return request;
     }
 
-    private void HandleRequestResponse(UnityWebRequest request, Action<AdjustResponse> onResponse)
+    private void HandleRequestResponse(UnityWebRequest request, Action<AdjustResponseData> onResponse)
     {
-        AdjustResponse adjustResponse = ParseResponse(request);
+        AdjustResponseData adjustResponse = ParseResponse(request);
         if (adjustResponse != null)
         {
             Debug.Log("[Adjust]: HTTP request completed successfully: " + request.downloadHandler.text);
@@ -197,12 +198,12 @@ public class Adjust
         }
     }
 
-    private AdjustResponse ParseResponse(UnityWebRequest request)
+    private AdjustResponseData ParseResponse(UnityWebRequest request)
     {
         long responseCode = request.responseCode;
         string ResponseBody = request.downloadHandler.text;
 
-        AdjustResponse adjustResponse = new AdjustResponse
+        AdjustResponseData adjustResponse = new AdjustResponseData
         {
             ResponseCode = responseCode,
             ResponseBody = ResponseBody
@@ -221,6 +222,17 @@ public class Adjust
                     adjustResponse.Adid = adid.ToString();
                 if (adjustResponse.JsonResponse.TryGetValue("error", out var error))
                     adjustResponse.Error = error.ToString();
+                if (adjustResponse.JsonResponse.TryGetValue("attribution", out var attributionObj))
+                {
+                    if (attributionObj is JObject attributionJson)
+                    {
+                        adjustResponse.Attribution = attributionJson.ToObject<AttributionData>();
+                    }
+                    else
+                    {
+                        Debug.LogError("[Adjust]: Attribution object is not of type JObject.");
+                    }
+                }
             }
             catch (Exception ex)
             {

@@ -39,6 +39,14 @@ public class SteamScript : MonoBehaviour
                 if (response != null)
                 {
                     Debug.Log($"Attribution Response: Response Code: {response.ResponseCode}, Response: {response.ResponseBody}, JsonResponse: {response.GetSerializedJsonResponse()}");
+
+                    // Extract and log attribution data
+                    if (response.Attribution != null)
+                    {
+                        Debug.Log($"Tracker Token: {response.Attribution.TrackerToken}");
+                        Debug.Log($"Tracker Name: {response.Attribution.TrackerName}");
+                        Debug.Log($"Network: {response.Attribution.Network}");
+                    }
                 }
                 else
                 {
