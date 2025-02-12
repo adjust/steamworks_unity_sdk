@@ -8,7 +8,6 @@ public class SteamScript : MonoBehaviour
 {
     public Button eventButton;
     private const string AdjustAppToken = "2fm9gkqubvpc";
-    private const string AdjustEnvironment = "sandbox";
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -18,7 +17,7 @@ public class SteamScript : MonoBehaviour
         if (SteamManager.Initialized)
         {
             // Create AdjustConfig with app token, environment, and the current MonoBehaviour instance
-            AdjustConfig adjustConfig = new AdjustConfig(AdjustAppToken, AdjustEnvironment, this);
+            AdjustConfig adjustConfig = new AdjustConfig(AdjustAppToken, AdjustEnvironment.Sandbox, this);
 
             // Adjust SDK initialization
             Adjust.InitSdk(adjustConfig, response =>

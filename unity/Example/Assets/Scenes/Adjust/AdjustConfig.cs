@@ -4,46 +4,35 @@ using UnityEngine;
 public class AdjustConfig
 {
     public string AppToken { get; private set; }
-    public string Environment { get; private set; }
+    public AdjustEnvironment Environment { get; private set; }
     public MonoBehaviour MonoBehaviour { get; private set; }
 
-    public AdjustConfig(string appToken, string environment, MonoBehaviour monoBehaviour)
-    {
-        if (!IsConfigValid(appToken, environment, monoBehaviour))
-        {
-            Debug.LogError("[Adjust]: Config is not valid");
-            return;
-        }
-
-        AppToken = appToken;
-        Environment = environment;
-        MonoBehaviour= monoBehaviour;
-    }
-
-    #region Helper methods
-    private bool IsConfigValid(string appToken, string environment, MonoBehaviour monoBehaviourInstance)
+    public AdjustConfig(string appToken, AdjustEnvironment environment, MonoBehaviour monoBehaviour)
     {
         if (!IsAppTokenValid(appToken))
         {
             Debug.LogError("[Adjust]: App token is not valid");
-            return false;
+            return;
         }
 
         if (!IsEnvironmentValid(environment))
         {
             Debug.LogError("[Adjust]: Environment is not valid");
-            return false;
+            return;
         }
 
-        if (!IsMonoBehaviourValid(monoBehaviourInstance))
+        if (!IsMonoBehaviourValid(monoBehaviour))
         {
             Debug.LogError("[Adjust]: MonoBehaviour instance is not valid");
-            return false;
+            return;
         }
 
-        return true;
+        AppToken = appToken;
+        Environment = environment;
+        MonoBehaviour = monoBehaviour;
     }
 
+    #region Helper methods
     private static bool IsAppTokenValid(string appToken)
     {
         if (string.IsNullOrEmpty(appToken))
@@ -54,16 +43,14 @@ public class AdjustConfig
         return appToken.Length == 12;
     }
 
-    private static bool IsEnvironmentValid(string environment)
+    private static bool IsEnvironmentValid(AdjustEnvironment environment)
     {
-        if (string.IsNullOrEmpty(environment))
+        bool isEnvironmentDefined = environment == AdjustEnvironment.Sandbox || environment == AdjustEnvironment.Production;
+        if (!isEnvironmentDefined)
         {
             return false;
         }
-        if (environment != "sandbox" && environment != "production")
-        {
-            return false;
-        }
+
         return true;
     }
 
@@ -73,6 +60,7 @@ public class AdjustConfig
         {
             return false;
         }
+
         return true;
     }
     #endregion
