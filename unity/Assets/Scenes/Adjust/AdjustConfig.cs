@@ -43,14 +43,16 @@ public class AdjustConfig
 
         return true;
     }
-    
+
     private static bool IsAppTokenValid(string appToken)
     {
         if (string.IsNullOrEmpty(appToken))
         {
             return false;
         }
-        return true;
+
+        return appToken.Length != 12;
+
     }
 
     private static bool IsEnvironmentValid(string environment)
