@@ -46,6 +46,10 @@ public class SteamScript : MonoBehaviour
                         Debug.Log($"Tracker Token: {response.AttributionData.TrackerToken}");
                         Debug.Log($"Tracker Name: {response.AttributionData.TrackerName}");
                         Debug.Log($"Network: {response.AttributionData.Network}");
+                        Debug.Log($"Campaign: {response.AttributionData.Campaign}");
+                        Debug.Log($"AdGroup: {response.AttributionData.Adgroup}");
+                        Debug.Log($"Creative: {response.AttributionData.Creative}");
+                        Debug.Log($"ClickLabel: {response.AttributionData.ClickLabel}");
                     }
                 }
                 else

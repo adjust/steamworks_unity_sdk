@@ -47,17 +47,5 @@ public class AdjustAttributionData
 
     [JsonProperty("click_label")]
     public string ClickLabel { get; set; }
-
-    [JsonProperty("cost_type")]
-    public string CostType { get; set; }
-
-    [JsonProperty("cost_amount")]
-    public double CostAmount { get; set; }
-
-    [JsonProperty("cost_currency")]
-    public string CostCurrency { get; set; }
-
-    [JsonProperty("fb_install_referrer")]
-    public string FbInstallReferrer { get; set; }
 }
 
