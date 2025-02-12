@@ -234,7 +234,7 @@ public class Adjust
                 {
                     if (attributionObj is JObject attributionJson)
                     {
-                        adjustResponse.AttributionData = attributionJson.ToObject<AttributionData>();
+                        adjustResponse.AttributionData = attributionJson.ToObject<AdjustAttributionData>();
                     }
                     else
                     {

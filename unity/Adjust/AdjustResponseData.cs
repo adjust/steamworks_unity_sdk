@@ -11,12 +11,12 @@ public class AdjustResponseData
     public string Adid { get; set; }
     public string Error { get; set; }
     public Dictionary<string, object> JsonResponse { get; set; }
-    public AttributionData AttributionData { get; set; }
+    public AdjustAttributionData AttributionData { get; set; }
 
     public AdjustResponseData()
     {
         JsonResponse = new Dictionary<string, object>();
-        AttributionData = new AttributionData();
+        AttributionData = new AdjustAttributionData();
     }
 
     public string GetSerializedJsonResponse()
@@ -25,7 +25,7 @@ public class AdjustResponseData
     }
 }
 
-public class AttributionData
+public class AdjustAttributionData
 {
     [JsonProperty("tracker_token")]
     public string TrackerToken { get; set; }
@@ -35,5 +35,29 @@ public class AttributionData
 
     [JsonProperty("network")]
     public string Network { get; set; }
+
+    [JsonProperty("campaign")]
+    public string Campaign { get; set; }
+
+    [JsonProperty("adgroup")]
+    public string Adgroup { get; set; }
+
+    [JsonProperty("creative")]
+    public string Creative { get; set; }
+
+    [JsonProperty("click_label")]
+    public string ClickLabel { get; set; }
+
+    [JsonProperty("cost_type")]
+    public string CostType { get; set; }
+
+    [JsonProperty("cost_amount")]
+    public double CostAmount { get; set; }
+
+    [JsonProperty("cost_currency")]
+    public string CostCurrency { get; set; }
+
+    [JsonProperty("fb_install_referrer")]
+    public string FbInstallReferrer { get; set; }
 }
 
