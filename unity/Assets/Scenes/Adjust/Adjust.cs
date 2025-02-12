@@ -345,20 +345,12 @@ public class Adjust
     #region Helper methods
     private static bool IsAdjustEventValid(AdjustEvent adjustEvent)
     {
-        if (adjustEvent == null)
-        {
-            return false;
-        }
-        return true;
+        return adjustEvent?.EventToken != null;
     }
 
     private static bool IsAdjustConfigValid(AdjustConfig adjustConfig)
     {
-        if (adjustConfig == null)
-        {
-            return false;
-        }
-        return true;
+        return adjustConfig?.AppToken != null;
     }
     #endregion
 }
