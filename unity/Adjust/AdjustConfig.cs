@@ -51,8 +51,7 @@ public class AdjustConfig
             return false;
         }
 
-        return appToken.Length != 12;
-
+        return appToken.Length == 12;
     }
 
     private static bool IsEnvironmentValid(string environment)
