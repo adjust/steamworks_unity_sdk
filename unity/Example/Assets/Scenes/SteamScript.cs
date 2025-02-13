@@ -17,7 +17,7 @@ public class SteamScript : MonoBehaviour
         if (SteamManager.Initialized)
         {
             // Create AdjustConfig with app token, environment, and the current MonoBehaviour instance
-            AdjustConfig adjustConfig = new AdjustConfig(AdjustAppToken, AdjustEnvironment.Sandbox, this);
+            AdjustConfig adjustConfig = new AdjustConfig(AdjustAppToken, AdjustConfig.EnvironmentSandbox, this);
 
             // Adjust SDK initialization
             Adjust.InitSdk(adjustConfig, response =>

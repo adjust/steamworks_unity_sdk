@@ -3,11 +3,15 @@ using UnityEngine;
 
 public class AdjustConfig
 {
+    //constants
+    public const string EnvironmentSandbox = "sandbox";
+    public const string EnvironmentProduction = "production";
+
     public string AppToken { get; private set; }
-    public AdjustEnvironment Environment { get; private set; }
+    public string Environment { get; private set; }
     public MonoBehaviour MonoBehaviour { get; private set; }
 
-    public AdjustConfig(string appToken, AdjustEnvironment environment, MonoBehaviour monoBehaviour)
+    public AdjustConfig(string appToken, string environment, MonoBehaviour monoBehaviour)
     {
         if (!IsAppTokenValid(appToken))
         {
@@ -43,10 +47,13 @@ public class AdjustConfig
         return appToken.Length == 12;
     }
 
-    private static bool IsEnvironmentValid(AdjustEnvironment environment)
+    private static bool IsEnvironmentValid(string environment)
     {
-        bool isEnvironmentDefined = environment == AdjustEnvironment.Sandbox || environment == AdjustEnvironment.Production;
-        if (!isEnvironmentDefined)
+        if (string.IsNullOrEmpty(environment))
+        {
+            return false;
+        }
+        if (environment != EnvironmentProduction && environment != EnvironmentSandbox)
         {
             return false;
         }

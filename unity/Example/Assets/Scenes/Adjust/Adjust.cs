@@ -31,7 +31,7 @@ public class Adjust
     private Adjust(AdjustConfig adjustConfig)
     {
         this.appToken = adjustConfig.AppToken;
-        this.environment = AdjustEnvironmentExtension.ToLowercaseString(adjustConfig.Environment);
+        this.environment = adjustConfig.Environment;
         this.steamId = GetSteamId();
         this.steamUuid = GetSteamUuid();
         this.osName = GetOsName();
