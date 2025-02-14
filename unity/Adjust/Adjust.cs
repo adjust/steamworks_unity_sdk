@@ -49,9 +49,9 @@ public class Adjust
             Debug.LogError("[Adjust]: Adjust SDK already initialized");
             return;
         }
-        if (IsAdjustConfigValid(adjustConfig) == false)
+        if (adjustConfig == null || adjustConfig.IsValid() == false)
         {
-            Debug.LogError("[Adjust]: Adjust Config is not valid");
+            Debug.LogError("[Adjust]: AdjustConfig instance is not valid");
             return;
         }
 
@@ -63,7 +63,12 @@ public class Adjust
     {
         if (defaultInstance == null)
         {
-            Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
+            Debug.LogError("[Adjust]: Adjust SDK not initialized. Call InitSdk method first");
+            return;
+        }
+        if (adjustEvent == null || adjustEvent.IsValid() == false)
+        {
+            Debug.LogError("[Adjust]: AdjustEvent instance is not valid");
             return;
         }
 
@@ -74,7 +79,7 @@ public class Adjust
     {
         if (defaultInstance == null)
         {
-            Debug.LogError("[Adjust]: Adjust SDK not initialized - call InitSdk first");
+            Debug.LogError("[Adjust]: Adjust SDK not initialized. Call InitSdk method first");
             return;
         }
 
@@ -91,12 +96,6 @@ public class Adjust
 
     private void TrackEventInternal(AdjustEvent adjustEvent, Action<AdjustResponseData> onResponse)
     {
-        if (IsAdjustEventValid(adjustEvent) == false)
-        {
-            Debug.LogError("[Adjust]: AdjustEvent cannot be null.");
-            return;
-        }
-
         string url = $"{AdjustBaseUrl}/event";
 
         Dictionary<string, object> eventDictionary = adjustEvent.GetEventDictionary();
@@ -339,18 +338,6 @@ public class Adjust
     {
         var match = Regex.Match(SystemInfo.operatingSystem, @"\d+(\.\d+)+");
         return match.Success ? match.Value : "unknown";
-    }
-    #endregion
-
-    #region Helper methods
-    private static bool IsAdjustEventValid(AdjustEvent adjustEvent)
-    {
-        return adjustEvent?.EventToken != null;
-    }
-
-    private static bool IsAdjustConfigValid(AdjustConfig adjustConfig)
-    {
-        return adjustConfig?.AppToken != null;
     }
     #endregion
 }
