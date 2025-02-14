@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class AdjustConfig
 {
-    //constants
+    // Constants
     public const string EnvironmentSandbox = "sandbox";
     public const string EnvironmentProduction = "production";
 
@@ -64,13 +64,13 @@ public class AdjustConfig
         }
         if (environment == EnvironmentSandbox)
         {
-            Debug.Log("SANDBOX: Adjust is running in `sandbox` mode. Use this setting for testing. " +
+            Debug.Log("[Adjust]: SANDBOX: Adjust is running in `sandbox` mode. Use this setting for testing. " +
                       "Don't forget to set the environment to `production` before publishing!");
             return true;
         }
         if (environment == EnvironmentProduction)
         {
-            Debug.Log("PRODUCTION: Adjust is running in `production` mode. " +
+            Debug.Log("[Adjust]: PRODUCTION: Adjust is running in `production` mode. " +
                       "Use this setting only for the build that you want to publish. " +
                       "Set the environment to `sandbox` if you want to test your app!");
             return true;
