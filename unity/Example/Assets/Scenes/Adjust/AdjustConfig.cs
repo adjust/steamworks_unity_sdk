@@ -11,60 +11,80 @@ public class AdjustConfig
     public string Environment { get; private set; }
     public MonoBehaviour MonoBehaviour { get; private set; }
 
+    #region Public API
     public AdjustConfig(string appToken, string environment, MonoBehaviour monoBehaviour)
     {
-        if (!IsAppTokenValid(appToken))
-        {
-            Debug.LogError("[Adjust]: App token is not valid");
-            return;
-        }
-
-        if (!IsEnvironmentValid(environment))
-        {
-            Debug.LogError("[Adjust]: Environment is not valid");
-            return;
-        }
-
-        if (!IsMonoBehaviourValid(monoBehaviour))
-        {
-            Debug.LogError("[Adjust]: MonoBehaviour instance is not valid");
-            return;
-        }
-
         AppToken = appToken;
         Environment = environment;
         MonoBehaviour = monoBehaviour;
     }
 
-    #region Helper methods
-    private static bool IsAppTokenValid(string appToken)
+    public bool IsValid()
     {
-        if (string.IsNullOrEmpty(appToken))
+        if (!IsAppTokenValid(AppToken))
         {
             return false;
         }
-
-        return appToken.Length == 12;
-    }
-
-    private static bool IsEnvironmentValid(string environment)
-    {
-        if (string.IsNullOrEmpty(environment))
+        if (!IsEnvironmentValid(Environment))
         {
             return false;
         }
-        if (environment != EnvironmentProduction && environment != EnvironmentSandbox)
+        if (!IsMonoBehaviourValid(MonoBehaviour))
         {
             return false;
         }
 
         return true;
     }
+    #endregion
 
-    private static bool IsMonoBehaviourValid(MonoBehaviour monoBehaviour)
+    #region Helper methods
+    private bool IsAppTokenValid(string appToken)
+    {
+        if (appToken == null)
+        {
+            Debug.LogError("[Adjust]: App token can't be null");
+            return false;
+        }
+        if (appToken.Length != 12)
+        {
+            Debug.LogError("[Adjust]: App token malformed (" + appToken + ")");
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsEnvironmentValid(string environment)
+    {
+        if (environment == null)
+        {
+            Debug.LogError("[Adjust]: Environment can't be null");
+            return false;
+        }
+        if (environment == EnvironmentSandbox)
+        {
+            Debug.Log("SANDBOX: Adjust is running in `sandbox` mode. Use this setting for testing. " +
+                      "Don't forget to set the environment to `production` before publishing!");
+            return true;
+        }
+        if (environment == EnvironmentProduction)
+        {
+            Debug.Log("PRODUCTION: Adjust is running in `production` mode. " +
+                      "Use this setting only for the build that you want to publish. " +
+                      "Set the environment to `sandbox` if you want to test your app!");
+            return true;
+        }
+
+        Debug.LogError("[Adjust]: Environment unknown (" + environment + ")");
+        return false;
+    }
+
+    private bool IsMonoBehaviourValid(MonoBehaviour monoBehaviour)
     {
         if (monoBehaviour == null)
         {
+            Debug.LogError("[Adjust]: MonoBehaviour instance is not valid");
             return false;
         }
 

@@ -12,17 +12,30 @@ public class AdjustEvent
     private Dictionary<string, object> innerCallbackParameters;
     private Dictionary<string, object> innerPartnerParameters;
 
+    #region Public API
     public AdjustEvent(string eventToken)
     {
-        if (!IsEventTokenValid(eventToken))
-        {
-            Debug.LogError("[Adjust]: Event token cannot be null or empty.");
-            return;
-        }
-
         EventToken = eventToken;
         innerCallbackParameters = new Dictionary<string, object>();
         innerPartnerParameters = new Dictionary<string, object>();
+    }
+
+    public void SetRevenue(double revenue, string currency)
+    {
+        if (revenue <= 0)
+        {
+            Debug.LogError("[Adjust]: Revenue value is invalid.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(currency))
+        {
+            Debug.LogError("[Adjust]: Currency must be set with revenue.");
+            return;
+        }
+
+        Revenue = revenue;
+        Currency = currency;
     }
 
     public void AddCallbackParameter(string key, string value)
@@ -51,25 +64,11 @@ public class AdjustEvent
         }
     }
 
-    public void SetRevenue(double revenue, string currency)
+    public bool IsValid()
     {
-        if (revenue <= 0)
-        {
-            Debug.LogError("[Adjust]: Revenue value is invalid.");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(currency))
-        {
-            Debug.LogError("[Adjust]: Currency must be set with revenue.");
-            return;
-        }
-
-        Revenue = revenue;
-        Currency = currency;
+        return !string.IsNullOrEmpty(EventToken);
     }
 
-    #region Helper methods
     public Dictionary<string, object> GetEventDictionary()
     {
         var eventData = new Dictionary<string, object>
@@ -86,20 +85,6 @@ public class AdjustEvent
         }
 
         return eventData;
-    }
-
-    private static bool IsEventTokenValid(string eventToken)
-    {
-        if (string.IsNullOrEmpty(eventToken))
-        {
-            return false;
-        }
-        return true;
-    }
-
-    public string ToJson()
-    {
-        return JsonConvert.SerializeObject(GetEventDictionary());
     }
     #endregion
 }
