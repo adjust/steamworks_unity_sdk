@@ -1,4 +1,4 @@
-### Version 1.0.0 (6th October 2025)
+### Version 1.0.0 (22nd October 2025)
 
 #### Added
 - Initial release of the Adjust SDK for Unity apps using Steamworks.
