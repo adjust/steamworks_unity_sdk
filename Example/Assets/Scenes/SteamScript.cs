@@ -18,6 +18,11 @@ public class SteamScript : MonoBehaviour
         {
             // Create AdjustConfig with app token, environment, and the current MonoBehaviour instance
             AdjustConfig adjustConfig = new AdjustConfig(AdjustAppToken, AdjustConfig.EnvironmentSandbox, this);
+            var storeInfo = new AdjustStoreInfo("Steam")
+            {
+                StoreAppId = "480"
+            };
+            adjustConfig.SetStoreInfo(storeInfo);
 
             // Adjust SDK initialization
             Adjust.InitSdk(adjustConfig, response =>

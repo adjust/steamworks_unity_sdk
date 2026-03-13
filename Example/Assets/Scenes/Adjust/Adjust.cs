@@ -16,6 +16,7 @@ public class Adjust
     private static Adjust defaultInstance;
     private string appToken;
     private string environment;
+    private AdjustStoreInfo storeInfo;
     private string steamId;
     private string steamUuid;
 
@@ -32,6 +33,7 @@ public class Adjust
     {
         this.appToken = adjustConfig.AppToken;
         this.environment = adjustConfig.Environment;
+        this.storeInfo = adjustConfig.StoreInfo;
         this.steamId = GetSteamId();
         this.steamUuid = GetSteamUuid();
         this.osName = GetOsName();
@@ -91,7 +93,7 @@ public class Adjust
     private void TrackSessionInternal(Action<AdjustResponseData> onResponse)
     {
         string url = $"{AdjustBaseUrl}/session";
-        monoBehavior.StartCoroutine(SendRequest(url, null, onResponse));
+        monoBehavior.StartCoroutine(SendRequest(url, GenerateSessionPayload(), onResponse));
     }
 
     private void TrackEventInternal(AdjustEvent adjustEvent, Action<AdjustResponseData> onResponse)
@@ -281,6 +283,22 @@ public class Adjust
         else
         {
             payload.Add("steam_uuid", GetSteamUuid());
+        }
+
+        return payload;
+    }
+
+    private Dictionary<string, object> GenerateSessionPayload()
+    {
+        var payload = new Dictionary<string, object>();
+
+        if (storeInfo != null)
+        {
+            payload.Add("store_name_from_client", storeInfo.StoreName);
+            if (!string.IsNullOrEmpty(storeInfo.StoreAppId))
+            {
+                payload.Add("store_app_id_from_client", storeInfo.StoreAppId);
+            }
         }
 
         return payload;

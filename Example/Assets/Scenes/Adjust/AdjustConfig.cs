@@ -10,6 +10,7 @@ public class AdjustConfig
     public string AppToken { get; private set; }
     public string Environment { get; private set; }
     public MonoBehaviour MonoBehaviour { get; private set; }
+    public AdjustStoreInfo StoreInfo { get; private set; }
 
     #region Public API
     public AdjustConfig(string appToken, string environment, MonoBehaviour monoBehaviour)
@@ -35,6 +36,17 @@ public class AdjustConfig
         }
 
         return true;
+    }
+
+    public void SetStoreInfo(AdjustStoreInfo storeInfo)
+    {
+        if (storeInfo == null || !storeInfo.IsValid())
+        {
+            Debug.LogError("[Adjust]: StoreInfo instance is not valid");
+            return;
+        }
+
+        StoreInfo = storeInfo;
     }
     #endregion
 
