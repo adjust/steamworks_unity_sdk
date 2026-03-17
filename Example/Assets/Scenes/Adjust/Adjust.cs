@@ -146,7 +146,7 @@ public class Adjust
             }
         }
         UnityWebRequest request = isPost ? CreatePostRequest(url, mergedPayload) : CreateGetRequest(url, mergedPayload);
-        request.SetRequestHeader("Client-Sdk", "steam_unity1.0.0");
+        request.SetRequestHeader("Client-Sdk", "steam_unity1.1.0");
         yield return request.SendWebRequest();
         HandleRequestResponse(request, onResponse);
     }
